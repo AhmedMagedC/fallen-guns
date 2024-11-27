@@ -25,5 +25,3 @@ dist-ssr
 #TLS/SSL cert,key
 cert.pem
 key.pem
-
-part10.html
