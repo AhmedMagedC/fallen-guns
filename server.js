@@ -16,7 +16,7 @@ const options = {
 };
 
 // Serve static files
-app.use(express.static("./public")); // 'public' is the folder containing your HTML/JS files
+app.use(express.static("./"));
 
 // Create HTTPS server
 const server = https.createServer(options, app);
@@ -34,6 +34,7 @@ io.on("connection", (socket) => {
   players[socket.id] = {
     x: Math.random() * 800, // Random starting position
     y: 800,
+    state: "idle", // player is currently running or idle
   };
 
   // Notify all clients of the new player list
@@ -51,13 +52,20 @@ io.on("connection", (socket) => {
     if (players[socket.id]) {
       players[socket.id].x = data.x;
       players[socket.id].y = data.y;
-      io.emit("syncAll", data); // Sync players
+      io.emit("syncPosition", data); // Sync players
+    }
+  });
+
+  socket.on("updateState", (data) => {
+    if (players[socket.id]) {
+      players[socket.id].state=data.state
+      io.emit("syncState", data); // Sync players
     }
   });
 });
 
 // Start the server
 const PORT = 8080;
-server.listen(PORT, "192.168.1.6", () => {
-  console.log(`Server is running at https://192.168.1.6:${PORT}`);
+server.listen(PORT, "25.33.122.236", () => {
+  console.log(`Server is running at https://25.33.122.236:${PORT}`);
 });

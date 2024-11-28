@@ -1,9 +1,9 @@
-import { Player } from "./player/player.js";
+import { Player } from "../player/player.js";
 
-class MyScene extends Phaser.Scene {
+export class FirstScene extends Phaser.Scene {
   constructor() {
     super({
-      key: "Level1",
+      key: "firstscene",
       physics: {
         arcade: {
           debug: false,
@@ -13,32 +13,22 @@ class MyScene extends Phaser.Scene {
     });
   }
 
-  preload() {
-    this.load.image("sky", "/assets/sky.png");
-    this.load.image("star", "/assets/star.png");
-    this.load.spritesheet("ninja", "./assets/Ninja Frog/Idle (32x32).png", {
-      frameWidth: 32,
-      frameHeight: 32,
-    });
-    this.load.spritesheet("run", "./assets/Ninja Frog/Run (32x32).png", {
-      frameWidth: 32,
-      frameHeight: 32,
-    });
-  }
+  preload() {}
 
   create() {
-    this.add.image(400, 300, "sky");
-    this.add.image(400, 300, "star");
+    this.add.image(450, 350, "background");
 
     this.players = {}; // Store all players
     this.socket = io(); // Connect to the server
+
     // Listen for player data from the server
     this.socket.on("playerData", (players) => {
       console.log(`${this.socket.id}`);
       Object.keys(players).forEach((id) => {
         if (!this.players[id]) {
           const { x, y } = players[id];
-          this.players[id] = new Player(this, x, y, "ninja_frog");
+          this.players[id] = new Player(this, x, y, "frog");
+          this.players[id].state = "idle";
         }
       });
     });
@@ -52,39 +42,40 @@ class MyScene extends Phaser.Scene {
       });
     });
 
-    this.socket.on("syncAll", (data) => {
+    this.socket.on("syncPosition", (data) => {
       if (data.id != this.socket.id) {
         this.players[data.id].setPosition(data.x, data.y);
+      }
+    });
+    this.socket.on("syncState", (data) => {
+      if (
+        data.id != this.socket.id &&
+        data.state != this.players[data.id].state
+      ) {
+        this.players[data.id].playAnim(data.state);
+        this.players[data.id].state = data.state;
       }
     });
   }
 
   update() {
     if (this.players[this.socket.id]) {
-      if (this.players[this.socket.id].update()) {
+      var updatedState = this.players[this.socket.id].updateMovement();
+      if (updatedState !== "idle") {
+        this.socket.emit("updateState", {
+          id: this.socket.id,
+          state: updatedState,
+        });
         this.socket.emit("updatePosition", {
           x: this.players[this.socket.id].x,
           y: this.players[this.socket.id].y,
           id: this.socket.id,
         });
-      }
+      } else
+        this.socket.emit("updateState", {
+          id: this.socket.id,
+          state: updatedState,
+        });
     }
   }
 }
-
-const ratio = Math.max(
-  window.innerWidth / window.innerHeight,
-  window.innerHeight / window.innerWidth
-);
-const DEFAULT_HEIGHT = 720; // any height you want
-const DEFAULT_WIDTH = ratio * DEFAULT_HEIGHT;
-
-var config = {
-  type: Phaser.AUTO,
-  width: 800,
-  height: 600,
-};
-
-var game = new Phaser.Game(config);
-
-game.scene.add("test", new MyScene(), true);
