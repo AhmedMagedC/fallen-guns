@@ -7,7 +7,7 @@ export class FirstScene extends Phaser.Scene {
       physics: {
         arcade: {
           debug: false,
-          gravity: { y: 200 },
+          gravity: { y: 800 },
         },
       },
     });
@@ -17,21 +17,28 @@ export class FirstScene extends Phaser.Scene {
 
   create() {
     this.add.image(450, 350, "background");
-
     this.players = {}; // Store all players
     this.socket = io(); // Connect to the server
-
     // Listen for player data from the server
+    const ground = this.physics.add.staticImage(0, 720, 'platform');
+
+    // Scale it down proportionally
+    ground.setScale(1); // Adjust the scale value as needed
+    ground.refreshBody(); // Update the physics body after scaling
+
+    
     this.socket.on("playerData", (players) => {
-      console.log(`${this.socket.id}`);
       Object.keys(players).forEach((id) => {
         if (!this.players[id]) {
           const { x, y } = players[id];
           this.players[id] = new Player(this, x, y, "frog");
-          this.players[id].state = "idle";
+          this.players[id].state = "idle right";
+          this.players[id].playAnim(this.players[id].state);
+          this.physics.add.collider(this.players[id], ground);
         }
       });
     });
+    
 
     this.socket.on("removePlayer", (players) => {
       Object.keys(this.players).forEach((id) => {
@@ -61,7 +68,7 @@ export class FirstScene extends Phaser.Scene {
   update() {
     if (this.players[this.socket.id]) {
       var updatedState = this.players[this.socket.id].updateMovement();
-      if (updatedState !== "idle") {
+      if (updatedState.slice(0, 4) !== "idle") {
         this.socket.emit("updateState", {
           id: this.socket.id,
           state: updatedState,

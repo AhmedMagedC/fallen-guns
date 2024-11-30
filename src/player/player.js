@@ -1,8 +1,11 @@
+import { Anim } from "../animation/animation.js";
 export class Player extends Phaser.GameObjects.Sprite {
   constructor(scene, x, y, name) {
-    super(scene, x, y, `${name}_idle`);
+    super(scene, x, y, `${name}_idle_right`);
     this.scene = scene;
     this.name = name;
+    this.recentKey = null;
+    this.animation = new Anim(this.scene, this.name);
     scene.add.existing(this);
     scene.physics.add.existing(this);
     this.init();
@@ -10,54 +13,56 @@ export class Player extends Phaser.GameObjects.Sprite {
   init() {
     this.body.setCollideWorldBounds(true);
     this.cursor = this.scene.input.keyboard.createCursorKeys();
-
-    this.scene.anims.create({
-      key: "right",
-      frames: this.scene.anims.generateFrameNumbers(`${this.name}_right`, {
-        start: 0,
-        end: 11,
-      }),
-      frameRate: 20,
-      repeat: -1,
-    });
-
-    this.scene.anims.create({
-      key: "left",
-      frames: this.scene.anims.generateFrameNumbers(`${this.name}_left`, {
-        start: 0,
-        end: 11,
-      }),
-      frameRate: 20,
-      repeat: -1,
-    });
-
-    this.scene.anims.create({
-      key: "idle",
-      frames: this.scene.anims.generateFrameNumbers(`${this.name}_idle`, {
-        start: 0,
-        end: 10,
-      }),
-      frameRate: 20,
-      repeat: -1,
-    });
+    this.animation.createAnim();
   }
   updateMovement() {
-    if (this.cursor.left.isDown) {
-      this.body.setVelocityX(-400);
-      this.playAnim("left");
-      return "left";
+    if (!this.body.touching.down && this.body.velocity.y > 0) {
+      if (this.recentKey == this.cursor.right || !this.recentKey) {
+        this.playAnim("run right");
+        return "run right";
+      } else {
+        this.playAnim("run left");
+        return "run left";
+      }
+    } else if (this.cursor.left.isDown) {
+      this.runLeft();
+      return "run left";
     } else if (this.cursor.right.isDown) {
-      this.body.setVelocityX(400);
-      this.playAnim("right");
-      return "right";
+      this.runRight();
+      return "run right";
+    } else if (this.cursor.up.isDown) {
+      if (this.cursor.right.isDown) {
+        this.recentKey = this.cursor.right;
+        this.body.setVelocityX(400);
+        this.playAnim("jump right", true);
+        return "jump right";
+      } else {
+        this.body.setVelocityY(-100);
+        this.playAnim("jump right", true);
+        return "jump right";
+      }
     } else {
+      var idle_pos =
+        this.recentKey == this.cursor.left ? "idle left" : "idle right";
       this.body.setVelocityX(0);
-      this.playAnim("idle");
-      return "idle";
+      this.playAnim(idle_pos);
+      return idle_pos;
     }
   }
 
   playAnim(key) {
     this.anims.play(key, true);
+  }
+
+  runRight() {
+    this.recentKey = this.cursor.right;
+    this.body.setVelocityX(400);
+    this.playAnim("run right");
+  }
+
+  runLeft() {
+    this.recentKey = this.cursor.left;
+    this.body.setVelocityX(-400);
+    this.playAnim("run left");
   }
 }

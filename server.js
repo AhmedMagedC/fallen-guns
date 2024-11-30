@@ -33,8 +33,8 @@ io.on("connection", (socket) => {
   // Add new player to the list
   players[socket.id] = {
     x: Math.random() * 800, // Random starting position
-    y: 800,
-    state: "idle", // player is currently running or idle
+    y: Math.random() * -1,
+    state: "idle right", // player is currently running or idle
   };
 
   // Notify all clients of the new player list
@@ -58,7 +58,7 @@ io.on("connection", (socket) => {
 
   socket.on("updateState", (data) => {
     if (players[socket.id]) {
-      players[socket.id].state=data.state
+      players[socket.id].state = data.state;
       io.emit("syncState", data); // Sync players
     }
   });
@@ -66,6 +66,6 @@ io.on("connection", (socket) => {
 
 // Start the server
 const PORT = 8080;
-server.listen(PORT, "25.33.122.236", () => {
-  console.log(`Server is running at https://25.33.122.236:${PORT}`);
+server.listen(PORT, "192.168.1.6", () => {
+  console.log(`Server is running at https://192.168.1.6:${PORT}`);
 });
