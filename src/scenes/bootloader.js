@@ -37,6 +37,7 @@ export class BootLoader extends Phaser.Scene {
         frameHeight: 32,
       }
     );
+
     this.load.spritesheet(
       "frog_jump_right",
       "../../public/assets/Ninja Frog/Jump Right.png",
@@ -45,9 +46,28 @@ export class BootLoader extends Phaser.Scene {
         frameHeight: 32,
       }
     );
+
     this.load.spritesheet(
       "frog_jump_left",
       "../../public/assets/Ninja Frog/Jump Left.png",
+      {
+        frameWidth: 32,
+        frameHeight: 32,
+      }
+    );
+
+    this.load.spritesheet(
+      "frog_dbljump_left",
+      "../../public/assets/Ninja Frog/dbljump Left.png",
+      {
+        frameWidth: 32,
+        frameHeight: 32,
+      }
+    );
+    
+    this.load.spritesheet(
+      "frog_dbljump_right",
+      "../../public/assets/Ninja Frog/dbljump Right.png",
       {
         frameWidth: 32,
         frameHeight: 32,
@@ -58,10 +78,7 @@ export class BootLoader extends Phaser.Scene {
       "background",
       "../../public/assets/Backgrounds/Background.png"
     );
-    this.load.image(
-      "platform",
-      "../../public/assets/platform.jpg"
-    );
+    this.load.image("platform", "../../public/assets/platform.jpg");
   }
   create() {
     this.scene.start("firstscene"); // Switch to FirstScene
