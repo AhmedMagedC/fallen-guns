@@ -6,7 +6,7 @@ const { Server } = require("socket.io");
 
 const app = express();
 
-// SSL certificates (replace with your actual paths)
+// SSL certificates
 let keyPath = path.join(__dirname, "key.pem");
 let certPath = path.join(__dirname, "cert.pem");
 
@@ -56,7 +56,7 @@ io.on("connection", (socket) => {
     }
   });
 
-  socket.on("updateState", (data) => {
+  socket.on("updateState", (data) => {  
     if (players[socket.id]) {
       players[socket.id].state = data.state;
       io.emit("syncState", data); // Sync players

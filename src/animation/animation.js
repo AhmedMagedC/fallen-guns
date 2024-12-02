@@ -1,3 +1,11 @@
+/* 
+Anim class is used to create different animations for different states for each player 
+(idle , running right , running left , jumping right , .... etc)
+it's determined by using <characterName>_<state>_<facingRightOrLeft>
+*/
+
+// animations are preloaded in bootloader.js
+
 export class Anim {
   constructor(scene, gameObjName) {
     this.name = gameObjName;
@@ -51,7 +59,7 @@ export class Anim {
         start: 0,
         end: 0,
       }),
-      frameRate: 5,
+      frameRate: 20,
       repeat: -1,
     });
 
@@ -61,7 +69,27 @@ export class Anim {
         start: 0,
         end: 0,
       }),
-      frameRate: 5,
+      frameRate: 20,
+      repeat: -1,
+    });
+
+    this.scene.anims.create({
+      key: "dbljump right",
+      frames: this.scene.anims.generateFrameNumbers(`${this.name}_dbljump_right`, {
+        start: 0,
+        end: 5,
+      }),
+      frameRate: 20,
+      repeat: -1,
+    });
+
+    this.scene.anims.create({
+      key: "dbljump left",
+      frames: this.scene.anims.generateFrameNumbers(`${this.name}_dbljump_left`, {
+        start: 0,
+        end: 5,
+      }),
+      frameRate: 20,
       repeat: -1,
     });
   }

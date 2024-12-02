@@ -1,13 +1,15 @@
 import { Anim } from "../animation/animation.js";
+
 export class Player extends Phaser.GameObjects.Sprite {
-  constructor(scene, x, y, name) {
-    super(scene, x, y, `${name}_idle_right`);
+  constructor(scene, x, y, state, name) {
+    super(scene, x, y);
     this.scene = scene;
     this.name = name;
-    this.recentKey = null;
+    this.currentState = state;
     this.animation = new Anim(this.scene, this.name);
-    scene.add.existing(this);
-    scene.physics.add.existing(this);
+    scene.add.existing(this); // add player to the scene
+    scene.physics.add.existing(this); // add physics to the player
+    this.doubleJump = false; // to detect the player did only a one double jump
     this.init();
   }
   init() {
@@ -16,37 +18,40 @@ export class Player extends Phaser.GameObjects.Sprite {
     this.animation.createAnim();
   }
   updateMovement() {
-    if (!this.body.touching.down && this.body.velocity.y > 0) {
-      if (this.recentKey == this.cursor.right || !this.recentKey) {
-        this.playAnim("run right");
-        return "run right";
-      } else {
-        this.playAnim("run left");
-        return "run left";
+    if (!this.body.touching.down) {
+      if (this.cursor.up.isDown && this.doubleJump) {
+        this.doubleJump = false;
+        this.body.setVelocityY(-300);
+        this.currentState = `dbljump ${this.currentState.split(" ")[1]}`;
       }
-    } else if (this.cursor.left.isDown) {
-      this.runLeft();
-      return "run left";
-    } else if (this.cursor.right.isDown) {
-      this.runRight();
-      return "run right";
-    } else if (this.cursor.up.isDown) {
       if (this.cursor.right.isDown) {
-        this.recentKey = this.cursor.right;
         this.body.setVelocityX(400);
-        this.playAnim("jump right", true);
-        return "jump right";
+        this.currentState = `${
+          this.currentState.split(" ")[0] == "dbljump" ? "dbljump" : "jump" // while in air , we either set and play jump or double jump animation
+        } right`;
+      } else if (this.cursor.left.isDown) {
+        this.body.setVelocityX(-400);
+        this.currentState = `${
+          this.currentState.split(" ")[0] == "dbljump" ? "dbljump" : "jump"
+        } left`;
       } else {
-        this.body.setVelocityY(-100);
-        this.playAnim("jump right", true);
-        return "jump right";
+        // being idle in air
+        this.body.setVelocityX(0);
+        this.currentState = `${
+          this.currentState.split(" ")[0] == "dbljump" ? "dbljump" : "jump"
+        } ${this.currentState.split(" ")[1]}`;
       }
+      this.playAnim(this.currentState);
     } else {
-      var idle_pos =
-        this.recentKey == this.cursor.left ? "idle left" : "idle right";
-      this.body.setVelocityX(0);
-      this.playAnim(idle_pos);
-      return idle_pos;
+      this.doubleJump = true;
+      if (this.cursor.right.isDown) {
+        if (this.cursor.up.isDown) this.jumpRight();
+        else this.runRight();
+      } else if (this.cursor.left.isDown) {
+        if (this.cursor.up.isDown) this.jumpLeft();
+        else this.runLeft();
+      } else if (this.cursor.up.isDown) this.jump();
+      else this.idle();
     }
   }
 
@@ -55,14 +60,40 @@ export class Player extends Phaser.GameObjects.Sprite {
   }
 
   runRight() {
-    this.recentKey = this.cursor.right;
     this.body.setVelocityX(400);
+    this.currentState = "run right";
     this.playAnim("run right");
   }
 
   runLeft() {
-    this.recentKey = this.cursor.left;
     this.body.setVelocityX(-400);
+    this.currentState = "run left";
     this.playAnim("run left");
+  }
+
+  jumpRight() {
+    this.currentState = "jump right";
+    this.body.setVelocityX(400);
+    this.body.setVelocityY(-300);
+    this.cursor.up.isDown = false; // necessary to play the first jump animation , without it double jump animation would be fired
+  }
+
+  jumpLeft() {
+    this.currentState = "jump left";
+    this.body.setVelocityX(-400);
+    this.body.setVelocityY(-300);
+    this.cursor.up.isDown = false;
+  }
+
+  jump() {
+    this.currentState = `jump ${this.currentState.split(" ")[1]}`;
+    this.body.setVelocityY(-300);
+    this.cursor.up.isDown = false;
+  }
+
+  idle() {
+    this.currentState = `idle ${this.currentState.split(" ")[1]}`;
+    this.body.setVelocityX(0);
+    this.playAnim(this.currentState);
   }
 }
