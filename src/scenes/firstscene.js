@@ -7,6 +7,7 @@ export class FirstScene extends Phaser.Scene {
       physics: {
         default: "arcade",
         arcade: {
+          debug: false,
           gravity: {
             y: 800,
           },
@@ -21,18 +22,28 @@ export class FirstScene extends Phaser.Scene {
     this.players = {}; // Store all players
     this.socket = io(); // Connect to the server
 
-    this.add.image(450, 350, "background");
+    const background = this.add.image(0, 0, "background");
+    const ground = this.physics.add
+      .staticImage(100, 850, "platform")
+      .setScale(1)
+      .refreshBody();
 
-    const ground = this.physics.add.staticImage(0, 720, "platform");
+    background.setOrigin(0, 0.4);
+    let scaleX = this.scale.width / background.width; // Scale based on screen width
+    let scaleY = this.scale.height / background.height; // Scale based on screen height
+    let scale = Math.max(scaleX, scaleY); // Use the larger scale to cover the entire screen
 
+    background.setScale(scale);
     // Listen for player data from the server
     this.socket.on("playerData", (players) => {
       Object.keys(players).forEach((id) => {
         if (!this.players[id]) {
           const { x, y } = players[id];
           const currentState = players[id].state;
-          this.players[id] = new Player(this, x, y, currentState, "frog");
+          this.players[id] = new Player(this, x, y, currentState, "gang1");
           this.players[id].state = currentState;
+          this.players[id].body.setSize(60, 90); // Adjust size for proper hitbox
+          this.players[id].body.setOffset(30, 40); // Adjust Offset for proper hitbox
           this.players[id].playAnim(currentState);
           this.physics.add.collider(this.players[id], ground);
         }

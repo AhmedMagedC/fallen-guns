@@ -15,6 +15,9 @@ export class Player extends Phaser.GameObjects.Sprite {
   init() {
     this.body.setCollideWorldBounds(true);
     this.cursor = this.scene.input.keyboard.createCursorKeys();
+    this.keys = this.scene.input.keyboard.addKeys({
+      f: Phaser.Input.Keyboard.KeyCodes.F,
+    });
     this.animation.createAnim();
   }
   updateMovement() {
@@ -44,7 +47,8 @@ export class Player extends Phaser.GameObjects.Sprite {
       this.playAnim(this.currentState);
     } else {
       this.doubleJump = true;
-      if (this.cursor.right.isDown) {
+      if (this.keys.f.isDown) this.Fire();
+      else if (this.cursor.right.isDown) {
         if (this.cursor.up.isDown) this.jumpRight();
         else this.runRight();
       } else if (this.cursor.left.isDown) {
@@ -94,6 +98,12 @@ export class Player extends Phaser.GameObjects.Sprite {
   idle() {
     this.currentState = `idle ${this.currentState.split(" ")[1]}`;
     this.body.setVelocityX(0);
+    this.playAnim(this.currentState);
+  }
+
+  Fire() {
+    this.body.setVelocityX(0);
+    this.currentState = `shot ${this.currentState.split(" ")[1]}`;
     this.playAnim(this.currentState);
   }
 }
