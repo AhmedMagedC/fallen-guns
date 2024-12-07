@@ -25,7 +25,7 @@ const server = https.createServer(options, app);
 const io = new Server(server);
 
 let players = {}; // Store player data by socket ID
-
+let bullet = {}; // bullet fired by client
 // Handle socket.io connections
 io.on("connection", (socket) => {
   console.log("A player connected:", socket.id);
@@ -35,6 +35,7 @@ io.on("connection", (socket) => {
     x: Math.random() * 800, // Random starting position
     y: Math.random() * -1,
     state: "idle right", // player is currently running or idle
+    health: 5,
   };
 
   // Notify all clients of the new player list
@@ -56,11 +57,21 @@ io.on("connection", (socket) => {
     }
   });
 
-  socket.on("updateState", (data) => {  
+  socket.on("updateState", (data) => {
     if (players[socket.id]) {
       players[socket.id].state = data.state;
       io.emit("syncState", data); // Sync players
     }
+  });
+
+  socket.on("createBullet", (bullet) => {
+    this.bullet = bullet;
+    io.emit("syncBullet", bullet);
+  });
+
+  socket.on("playerGotHit", (id) => {
+    players[id].health--;
+    io.emit("playerGotHitSync", id, players[id].health);
   });
 });
 

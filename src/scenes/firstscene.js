@@ -14,6 +14,8 @@ export class FirstScene extends Phaser.Scene {
         },
       },
     });
+    this.fireCooldown = 500; // 300ms cooldown between shots
+    this.lastFireTime = 0; // Timestamp of the last fire
   }
 
   preload() {}
@@ -23,6 +25,7 @@ export class FirstScene extends Phaser.Scene {
     this.socket = io(); // Connect to the server
 
     const background = this.add.image(0, 0, "background");
+
     const ground = this.physics.add
       .staticImage(100, 850, "platform")
       .setScale(1)
@@ -42,8 +45,8 @@ export class FirstScene extends Phaser.Scene {
           const currentState = players[id].state;
           this.players[id] = new Player(this, x, y, currentState, "gang1");
           this.players[id].state = currentState;
-          this.players[id].body.setSize(60, 90); // Adjust size for proper hitbox
-          this.players[id].body.setOffset(30, 40); // Adjust Offset for proper hitbox
+          this.players[id].body.setSize(30, 80); // Adjust size for proper hitbox
+          this.players[id].body.setOffset(45, 50); // Adjust Offset for proper hitbox
           this.players[id].playAnim(currentState);
           this.physics.add.collider(this.players[id], ground);
         }
@@ -80,12 +83,35 @@ export class FirstScene extends Phaser.Scene {
         this.players[data.id].state = data.state;
       }
     });
-  }
+    this.socket.on("syncBullet", (newBullet) => {
+      const bullet = this.physics.add.image(newBullet.x, newBullet.y, "bullet");
+      bullet.body.setVelocityX(newBullet.velocityX);
+      bullet.body.setAllowGravity(false);
 
-  update() {
+      Object.keys(this.players).forEach((id) => {
+        if (newBullet.srcID != id) {
+          // make bullet collides with all players ,except the one who fired it
+          this.physics.add.overlap(this.players[id], bullet, () => {
+            bullet.destroy();
+            if (this.socket.id == newBullet.srcID)
+              // necessary to make the player who got hit to lose only a single point of health
+              this.socket.emit("playerGotHit", id); // update the player's health
+          });
+        }
+      });
+    });
+
+    this.socket.on("playerGotHitSync", (id, curHealth) => {
+      if (curHealth <= 0) this.players[id].destroy();
+    });
+  }
+  update(time, delta) {
     if (this.players[this.socket.id]) {
       this.players[this.socket.id].updateMovement();
       let updatedState = this.players[this.socket.id].currentState;
+
+      if (updatedState.split(" ")[0] == "shot") this.Fired(time, updatedState);
+
       this.socket.emit("updateState", {
         id: this.socket.id,
         state: updatedState,
@@ -95,6 +121,27 @@ export class FirstScene extends Phaser.Scene {
         y: this.players[this.socket.id].y,
         id: this.socket.id,
       });
+    }
+  }
+
+  createBullet(x, y, velocityX) {
+    this.socket.emit("createBullet", { // notify the server for the bullet just fired
+      x: x,
+      y: y,
+      velocityX: velocityX,
+      srcID: this.socket.id,
+    });
+  }
+
+  Fired(time, updatedState) {
+    if (time - this.lastFireTime > this.fireCooldown) {
+      const facingLeft = updatedState.split(" ")[1] == "left" ? -1 : 1; //if facing left, make the velocity negative
+      this.createBullet(
+        this.players[this.socket.id].x + 25 * facingLeft, // adjust the bullet init position (so it looks as if it's coming out from the gun)
+        this.players[this.socket.id].y + 25,
+        2000 * facingLeft
+      );
+      this.lastFireTime = time;
     }
   }
 }
