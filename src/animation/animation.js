@@ -75,20 +75,26 @@ export class Anim {
 
     this.scene.anims.create({
       key: "dbljump right",
-      frames: this.scene.anims.generateFrameNumbers(`${this.name}_dbljump_right`, {
-        start: 0,
-        end: 9,
-      }),
+      frames: this.scene.anims.generateFrameNumbers(
+        `${this.name}_dbljump_right`,
+        {
+          start: 0,
+          end: 9,
+        }
+      ),
       frameRate: 10,
       repeat: 0,
     });
 
     this.scene.anims.create({
       key: "dbljump left",
-      frames: this.scene.anims.generateFrameNumbers(`${this.name}_dbljump_left`, {
-        start: 0,
-        end: 9,
-      }),
+      frames: this.scene.anims.generateFrameNumbers(
+        `${this.name}_dbljump_left`,
+        {
+          start: 0,
+          end: 9,
+        }
+      ),
       frameRate: 10,
       repeat: 0,
     });
@@ -111,6 +117,26 @@ export class Anim {
       }),
       frameRate: 10,
       repeat: -1,
+    });
+
+    this.scene.anims.create({
+      key: "hurt right",
+      frames: this.scene.anims.generateFrameNumbers(`${this.name}_hurt_right`, {
+        start: 0,
+        end: 4,
+      }),
+      frameRate: 10,
+      repeat: 0,
+    });
+
+    this.scene.anims.create({
+      key: "hurt left",
+      frames: this.scene.anims.generateFrameNumbers(`${this.name}_hurt_left`, {
+        start: 0,
+        end: 4,
+      }),
+      frameRate: 10,
+      repeat: 0,
     });
   }
 }

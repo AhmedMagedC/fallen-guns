@@ -10,6 +10,9 @@ export class Player extends Phaser.GameObjects.Sprite {
     scene.add.existing(this); // add player to the scene
     scene.physics.add.existing(this); // add physics to the player
     this.doubleJump = false; // to detect the player did only a one double jump
+    this.fireCooldown = 500; // 500ms cooldown between shots
+    this.lastFireTime = 0; // Timestamp of the last fire
+    this.fireSound = this.scene.sound.add("fire_sound");
     this.init();
   }
   init() {
@@ -20,7 +23,12 @@ export class Player extends Phaser.GameObjects.Sprite {
     });
     this.animation.createAnim();
   }
-  updateMovement() {
+  updateMovement(time) {
+    if (
+      this.anims.currentAnim.key.split(" ")[0] === "hurt" &&
+      this.anims.isPlaying
+    )
+      return; //if its the hurt animation then it must finish playing first before any other animation
     if (!this.body.touching.down) {
       if (this.cursor.up.isDown && this.doubleJump) {
         this.doubleJump = false;
@@ -47,7 +55,7 @@ export class Player extends Phaser.GameObjects.Sprite {
       this.playAnim(this.currentState);
     } else {
       this.doubleJump = true;
-      if (this.keys.f.isDown) this.Fire();
+      if (this.keys.f.isDown) this.Fire(time);
       else if (this.cursor.right.isDown) {
         if (this.cursor.up.isDown) this.jumpRight();
         else this.runRight();
@@ -101,9 +109,34 @@ export class Player extends Phaser.GameObjects.Sprite {
     this.playAnim(this.currentState);
   }
 
-  Fire() {
+  Fire(time) {
     this.body.setVelocityX(0);
     this.currentState = `shot ${this.currentState.split(" ")[1]}`;
+    this.playAnim(this.currentState);
+    if (time - this.lastFireTime > this.fireCooldown) {
+      const facingLeft = this.currentState.split(" ")[1] == "left" ? -1 : 1; //if facing left, make the velocity negative
+      this.createBullet(
+        this.x + 25 * facingLeft, // adjust the bullet init position (so it looks as if it's coming out from the gun)
+        this.y + 25,
+        2000 * facingLeft
+      );
+      this.fireSound.play();
+      this.lastFireTime = time;
+    }
+  }
+
+  createBullet(x, y, velocityX) {
+    this.scene.socket.emit("createBullet", {
+      // notify the server for the bullet just fired
+      x: x,
+      y: y,
+      velocityX: velocityX,
+      srcID: this.scene.socket.id,
+    });
+  }
+
+  gotHit() {
+    this.currentState = `hurt ${this.currentState.split(" ")[1]}`;
     this.playAnim(this.currentState);
   }
 }

@@ -35,7 +35,7 @@ io.on("connection", (socket) => {
     x: Math.random() * 800, // Random starting position
     y: Math.random() * -1,
     state: "idle right", // player is currently running or idle
-    health: 5,
+    health: 10000,
   };
 
   // Notify all clients of the new player list
