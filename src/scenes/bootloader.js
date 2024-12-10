@@ -91,6 +91,25 @@ export class BootLoader extends Phaser.Scene {
         frameHeight: 128,
       }
     );
+
+    this.load.spritesheet(
+      "gang1_hurt_right",
+      "../../public/assets/Gangsters_1/Hurt Right.png",
+      {
+        frameWidth: 128,
+        frameHeight: 128,
+      }
+    );
+
+    this.load.spritesheet(
+      "gang1_hurt_left",
+      "../../public/assets/Gangsters_1/Hurt Left.png",
+      {
+        frameWidth: 128,
+        frameHeight: 128,
+      }
+    );
+
     this.load.image(
       "background",
       "../../public/assets/Backgrounds/Background.png"
@@ -98,6 +117,7 @@ export class BootLoader extends Phaser.Scene {
 
     this.load.image("bullet", "../../public/assets/Bullets/bullet.png");
     this.load.image("platform", "../../public/assets/platform.jpg");
+    this.load.audio("fire_sound", "../../public/assets/Audio/Fire.mp3");
   }
   create() {
     this.scene.start("firstscene"); // Switch to FirstScene
