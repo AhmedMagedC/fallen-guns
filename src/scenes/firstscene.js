@@ -4,15 +4,6 @@ export class FirstScene extends Phaser.Scene {
   constructor() {
     super({
       key: "firstscene",
-      physics: {
-        default: "arcade",
-        arcade: {
-          debug: false,
-          gravity: {
-            y: 800,
-          },
-        },
-      },
     });
   }
 
@@ -20,7 +11,12 @@ export class FirstScene extends Phaser.Scene {
 
   create() {
     this.players = {}; // Store all players
-    this.socket = io(); // Connect to the server
+    this.socket = io({
+      query: {
+        playerName: this.scene.settings.data.name,
+        fireCoolDown: this.scene.settings.data.fireCoolDown,
+      },
+    }); // Connect to the server
 
     const background = this.add.image(0, 0, "background");
 
@@ -41,8 +37,17 @@ export class FirstScene extends Phaser.Scene {
         if (!this.players[id]) {
           const { x, y } = players[id];
           const currentState = players[id].state;
-          this.players[id] = new Player(this, x, y, currentState, "gang1");
-          this.players[id].currentState = currentState;
+          const playerName = players[id].playerName;
+          const fireCoolDown = players[id].fireCoolDown;
+          this.players[id] = new Player(
+            this,
+            id,
+            x,
+            y,
+            currentState,
+            playerName,
+            fireCoolDown
+          );
           this.players[id].body.setSize(30, 80); // Adjust size for proper hitbox
           this.players[id].body.setOffset(45, 50); // Adjust Offset for proper hitbox
           this.players[id].playAnim(currentState);
@@ -73,9 +78,12 @@ export class FirstScene extends Phaser.Scene {
     });
     this.socket.on("syncState", (data) => {
       // make all clients see the change of some client's state (idle,Running,jumping....)
+
       if (
-        data.id != this.socket.id &&
-        data.state != this.players[data.id].currentState
+        // dont repeat the animation , except for the shooting one
+        (data.id != this.socket.id &&
+          data.state != this.players[data.id].currentState) ||
+        (data.id != this.socket.id && data.state.split(" ")[0] == "shot")
       ) {
         this.players[data.id].playAnim(data.state);
         this.players[data.id].currentState = data.state;
@@ -85,10 +93,13 @@ export class FirstScene extends Phaser.Scene {
       const bullet = this.physics.add.image(newBullet.x, newBullet.y, "bullet");
       bullet.body.setVelocityX(newBullet.velocityX);
       bullet.body.setAllowGravity(false);
-      this.players[this.socket.id].fireSound.play();
-
+      this.players[newBullet.srcID].fireSound.play();
+      
       Object.keys(this.players).forEach((id) => {
-        if (newBullet.srcID != id) {
+        if (newBullet.x === -1 && newBullet.y === -1) {
+          // dont create a bullet if it's the shotgun player (make the bullet go out of boundries), instead collide if the enemey is 10m far from the player
+          // if(this.players[id].x)
+        } else if (newBullet.srcID != id) {
           // make bullet collides with all players ,except the one who fired it
           this.physics.add.overlap(this.players[id], bullet, () => {
             this.players[id].gotHit();
@@ -107,9 +118,9 @@ export class FirstScene extends Phaser.Scene {
       if (curHealth <= 0) this.players[id].destroy();
     });
   }
-  update(time) {
+  update() {
     if (this.players[this.socket.id]) {
-      this.players[this.socket.id].updateMovement(time);
+      this.players[this.socket.id].updateMovement();
       let updatedState = this.players[this.socket.id].currentState;
 
       this.socket.emit("updateState", {

@@ -25,7 +25,6 @@ const server = https.createServer(options, app);
 const io = new Server(server);
 
 let players = {}; // Store player data by socket ID
-let bullet = {}; // bullet fired by client
 // Handle socket.io connections
 io.on("connection", (socket) => {
   console.log("A player connected:", socket.id);
@@ -34,8 +33,10 @@ io.on("connection", (socket) => {
   players[socket.id] = {
     x: Math.random() * 800, // Random starting position
     y: Math.random() * -1,
-    state: "idle right", // player is currently running or idle
+    state: "idle right", // initial state of the client is idle
     health: 10000,
+    playerName: socket.handshake.query.playerName, // the character the client choose
+    fireCoolDown: socket.handshake.query.fireCoolDown, // fireCoolDown for that particular character
   };
 
   // Notify all clients of the new player list
