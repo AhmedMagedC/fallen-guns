@@ -11,6 +11,7 @@ export class MainMenu extends Phaser.Scene {
   create() {
     const characters = ["Gangsters_1", "Gangsters_2", "Raider_1"]; // currently available characters in the game
     const fireCoolDown = { Gangsters_1: 100, Gangsters_2: 800, Raider_1: 200 }; // cool down between shots for every characater
+    const Damage = { Gangsters_1: 2, Gangsters_2: 6, Raider_1: 4 }; // each character's damage
 
     let initX = 300,
       InitY = 300;
@@ -21,7 +22,7 @@ export class MainMenu extends Phaser.Scene {
       character.name = char;
 
       character.on("pointerdown", () =>
-        this.selectCharacter.call(this, character, fireCoolDown)
+        this.selectCharacter.call(this, character, fireCoolDown, Damage)
       );
       initX += 300;
     });
@@ -34,7 +35,7 @@ export class MainMenu extends Phaser.Scene {
       .setOrigin(0.5);
   }
 
-  selectCharacter(character, fireCoolDown) {
+  selectCharacter(character, fireCoolDown, Damage) {
     // Remove highlight from previously selected character
     if (selectedChar) {
       selectedChar.setTint(0xffffff); // Reset color
@@ -52,6 +53,7 @@ export class MainMenu extends Phaser.Scene {
       this.scene.start("firstscene", {
         name: selectedChar.name,
         fireCoolDown: fireCoolDown[selectedChar.name],
+        Damage: Damage[selectedChar.name],
       });
     });
   }

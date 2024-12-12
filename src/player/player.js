@@ -12,10 +12,12 @@ export class Player extends Phaser.GameObjects.Sprite {
     this.init();
   }
   init() {
+    this.speedX = 500;
+    this.speedY = 420;
     this.animation.createAnim();
     this.scene.add.existing(this); // add player to the scene
     this.scene.physics.add.existing(this); // add physics to the player
-    this.isDoubleJumped = false; // to detect the player did only a one double jump
+    this.canDoubleJump = false; // to detect the player did only a one double jump
     this.fireSound = this.scene.sound.add(`${this.name}_gun_sound`); // sound of the gun
     this.body.setCollideWorldBounds(true);
     this.cursor = this.scene.input.keyboard.createCursorKeys();
@@ -60,7 +62,7 @@ export class Player extends Phaser.GameObjects.Sprite {
     )
       return; //if its the hurt animation then it must finish playing first before any other animation
     if (!this.body.touching.down) {
-      if (this.cursor.up.isDown && this.isDoubleJumped) this.doubleJump();
+      if (this.cursor.up.isDown && this.canDoubleJump) this.doubleJump();
 
       if (this.cursor.right.isDown) this.moveRightInAir();
       else if (this.cursor.left.isDown) this.moveLeftInAir();
@@ -68,7 +70,7 @@ export class Player extends Phaser.GameObjects.Sprite {
 
       this.playAnim(this.currentState);
     } else {
-      this.isDoubleJumped = true;
+      this.canDoubleJump = true;
       if (this.keys.f.isDown) this.Fire();
       else if (this.cursor.right.isDown) {
         if (this.cursor.up.isDown) this.jumpRight();
@@ -86,34 +88,34 @@ export class Player extends Phaser.GameObjects.Sprite {
   }
 
   runRight() {
-    this.body.setVelocityX(400);
+    this.body.setVelocityX(this.speedX);
     this.currentState = "run right";
     this.playAnim("run right");
   }
 
   runLeft() {
-    this.body.setVelocityX(-400);
+    this.body.setVelocityX(-this.speedX);
     this.currentState = "run left";
     this.playAnim("run left");
   }
 
   jumpRight() {
     this.currentState = "jump right";
-    this.body.setVelocityX(400);
-    this.body.setVelocityY(-300);
+    this.body.setVelocityX(this.speedX);
+    this.body.setVelocityY(-this.speedY);
     this.cursor.up.isDown = false; // necessary to play the first jump animation , without it double jump animation would be fired
   }
 
   jumpLeft() {
     this.currentState = "jump left";
-    this.body.setVelocityX(-400);
-    this.body.setVelocityY(-300);
+    this.body.setVelocityX(-this.speedX);
+    this.body.setVelocityY(-this.speedY);
     this.cursor.up.isDown = false;
   }
 
   jump() {
     this.currentState = `jump ${this.currentState.split(" ")[1]}`;
-    this.body.setVelocityY(-300);
+    this.body.setVelocityY(-this.speedY);
     this.cursor.up.isDown = false;
   }
 
@@ -124,20 +126,20 @@ export class Player extends Phaser.GameObjects.Sprite {
   }
 
   doubleJump() {
-    this.isDoubleJumped = false;
-    this.body.setVelocityY(-300);
+    this.canDoubleJump = false;
+    this.body.setVelocityY(-this.speedY);
     this.currentState = `dbljump ${this.currentState.split(" ")[1]}`;
   }
 
   moveRightInAir() {
-    this.body.setVelocityX(400);
+    this.body.setVelocityX(this.speedX);
     this.currentState = `${
       this.currentState.split(" ")[0] == "dbljump" ? "dbljump" : "jump" // while in air , we either set and play jump or double jump animation
     } right`;
   }
 
   moveLeftInAir() {
-    this.body.setVelocityX(-400);
+    this.body.setVelocityX(-this.speedX);
     this.currentState = `${
       this.currentState.split(" ")[0] == "dbljump" ? "dbljump" : "jump" // while in air , we either set and play jump or double jump animation
     } left`;
@@ -171,4 +173,6 @@ export class Player extends Phaser.GameObjects.Sprite {
     this.currentState = `hurt ${this.currentState.split(" ")[1]}`;
     this.playAnim(this.currentState);
   }
+
+
 }

@@ -24,6 +24,7 @@ const server = https.createServer(options, app);
 // Attach socket.io to the HTTPS server
 const io = new Server(server);
 
+
 let players = {}; // Store player data by socket ID
 // Handle socket.io connections
 io.on("connection", (socket) => {
@@ -34,9 +35,10 @@ io.on("connection", (socket) => {
     x: Math.random() * 800, // Random starting position
     y: Math.random() * -1,
     state: "idle right", // initial state of the client is idle
-    health: 10000,
+    health: 10,
     playerName: socket.handshake.query.playerName, // the character the client choose
     fireCoolDown: socket.handshake.query.fireCoolDown, // fireCoolDown for that particular character
+    Damage: socket.handshake.query.Damage,
   };
 
   // Notify all clients of the new player list
@@ -70,14 +72,14 @@ io.on("connection", (socket) => {
     io.emit("syncBullet", bullet);
   });
 
-  socket.on("playerGotHit", (id) => {
-    players[id].health--;
+  socket.on("playerGotHit", (id, srcID) => {
+    players[id].health -= players[srcID].Damage;
     io.emit("playerGotHitSync", id, players[id].health);
   });
 });
 
 // Start the server
 const PORT = 8080;
-server.listen(PORT, "192.168.1.6", () => {
-  console.log(`Server is running at https://192.168.1.6:${PORT}`);
+server.listen(PORT, "26.229.37.155", () => {
+  console.log(`Server is running at https://26.229.37.155:${PORT}`);
 });
