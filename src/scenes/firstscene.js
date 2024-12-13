@@ -10,27 +10,19 @@ export class FirstScene extends Phaser.Scene {
   preload() {}
 
   create() {
+    this.createBackGround();
+    const grounds = [];
+    this.createGrounds(grounds);
+
     this.players = {}; // Store all players
     this.socket = io({
       query: {
         playerName: this.scene.settings.data.name,
         fireCoolDown: this.scene.settings.data.fireCoolDown,
+        Damage: this.scene.settings.data.Damage,
       },
     }); // Connect to the server
 
-    const background = this.add.image(0, 0, "background");
-
-    const ground = this.physics.add
-      .staticImage(100, 850, "platform")
-      .setScale(1)
-      .refreshBody();
-
-    background.setOrigin(0, 0.4);
-    let scaleX = this.scale.width / background.width; // Scale based on screen width
-    let scaleY = this.scale.height / background.height; // Scale based on screen height
-    let scale = Math.max(scaleX, scaleY); // Use the larger scale to cover the entire screen
-
-    background.setScale(scale);
     // Listen for player data from the server
     this.socket.on("playerData", (players) => {
       Object.keys(players).forEach((id) => {
@@ -51,7 +43,9 @@ export class FirstScene extends Phaser.Scene {
           this.players[id].body.setSize(30, 80); // Adjust size for proper hitbox
           this.players[id].body.setOffset(45, 50); // Adjust Offset for proper hitbox
           this.players[id].playAnim(currentState);
-          this.physics.add.collider(this.players[id], ground);
+          grounds.forEach((ground) => {
+            this.physics.add.collider(this.players[id], ground);
+          });
         }
       });
     });
@@ -94,11 +88,24 @@ export class FirstScene extends Phaser.Scene {
       bullet.body.setVelocityX(newBullet.velocityX);
       bullet.body.setAllowGravity(false);
       this.players[newBullet.srcID].fireSound.play();
-      
+
       Object.keys(this.players).forEach((id) => {
-        if (newBullet.x === -1 && newBullet.y === -1) {
-          // dont create a bullet if it's the shotgun player (make the bullet go out of boundries), instead collide if the enemey is 10m far from the player
-          // if(this.players[id].x)
+        if (newBullet.y == -1 && newBullet.srcID != id) {
+          // dont create a bullet if it's the shotgun player (make the bullet go out of boundries), instead collide if the enemey is 70m far from the player
+          const distanceFromSrcPlayer =
+            this.players[id].x - this.players[newBullet.srcID].x;
+          if (
+            distanceFromSrcPlayer * newBullet.x >= 0 && //newBullet.x to determine the direction of the gun
+            distanceFromSrcPlayer * newBullet.x <= 70
+          ) {
+            this.players[id].gotHit();
+
+            bullet.destroy();
+
+            if (this.socket.id == newBullet.srcID)
+              // necessary to make the player who got hit to lose only a single point of health
+              this.socket.emit("playerGotHit", id, newBullet.srcID); // update the player's health
+          }
         } else if (newBullet.srcID != id) {
           // make bullet collides with all players ,except the one who fired it
           this.physics.add.overlap(this.players[id], bullet, () => {
@@ -108,7 +115,7 @@ export class FirstScene extends Phaser.Scene {
 
             if (this.socket.id == newBullet.srcID)
               // necessary to make the player who got hit to lose only a single point of health
-              this.socket.emit("playerGotHit", id); // update the player's health
+              this.socket.emit("playerGotHit", id, newBullet.srcID); // update the player's health
           });
         }
       });
@@ -135,4 +142,32 @@ export class FirstScene extends Phaser.Scene {
       });
     }
   }
+  createBackGround() {
+    const background = this.add.image(0, 0, "background");
+
+    background.setOrigin(0, 0.4);
+    let scaleX = this.scale.width / background.width; // Scale based on screen width
+    let scaleY = this.scale.height / background.height; // Scale based on screen height
+    let scale = Math.max(scaleX, scaleY * 1.9); // Use the larger scale to cover the entire screen
+
+    background.setScale(scale);
+  }
+  createGrounds(grounds) {
+    grounds[0] = this.physics.add
+      .staticImage(0, 250, "platform")
+      .setScale(0.06)
+      .refreshBody();
+
+    grounds[1] = this.physics.add
+      .staticImage(this.scale.width, 250, "platform")
+      .setScale(0.07)
+      .refreshBody();
+
+    grounds[2] = this.physics.add
+      .staticImage(this.scale.width / 2, 450, "platform")
+      .setScale(0.17,0.07)
+      .refreshBody();
+  }
+
+
 }
