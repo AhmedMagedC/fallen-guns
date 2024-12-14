@@ -1,20 +1,31 @@
+const https = require("https");
+const fs = require("fs");
+const path = require("path");
 const express = require("express");
 const { Server } = require("socket.io");
-const http = require("http"); // Use HTTP instead of HTTPS for deployment
 
 const app = express();
+
+// SSL certificates
+let keyPath = path.join(__dirname, "key.pem");
+let certPath = path.join(__dirname, "cert.pem");
+
+const options = {
+  key: fs.readFileSync(keyPath),
+  cert: fs.readFileSync(certPath),
+};
 
 // Serve static files
 app.use(express.static("./"));
 
-// Create HTTP server
-const server = http.createServer(app);
+// Create HTTPS server
+const server = https.createServer(options, app);
 
-// Attach socket.io to the HTTP server
+// Attach socket.io to the HTTPS server
 const io = new Server(server);
 
-let players = {}; // Store player data by socket ID
 
+let players = {}; // Store player data by socket ID
 // Handle socket.io connections
 io.on("connection", (socket) => {
   console.log("A player connected:", socket.id);
@@ -23,9 +34,9 @@ io.on("connection", (socket) => {
   players[socket.id] = {
     x: Math.random() * 800, // Random starting position
     y: Math.random() * -1,
-    state: "idle right", // Initial state of the client is idle
+    state: "idle right", // initial state of the client is idle
     health: 10,
-    playerName: socket.handshake.query.playerName, // The character the client chose
+    playerName: socket.handshake.query.playerName, // the character the client choose
     fireCoolDown: socket.handshake.query.fireCoolDown, // fireCoolDown for that particular character
     Damage: socket.handshake.query.Damage,
   };
@@ -67,8 +78,8 @@ io.on("connection", (socket) => {
   });
 });
 
-// Use environment variables for dynamic port
-const PORT = process.env.PORT || 8080; // Default to 8080 for local testing
-server.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+// Start the server
+const PORT = 8080;
+server.listen(PORT, "192.168.1.6", () => {
+  console.log(`Server is running at https://192.168.1.6:${PORT}`);
 });
