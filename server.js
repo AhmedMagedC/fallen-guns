@@ -1,31 +1,20 @@
-const https = require("https");
-const fs = require("fs");
-const path = require("path");
 const express = require("express");
 const { Server } = require("socket.io");
+const http = require("http"); // Use HTTP instead of HTTPS for deployment
 
 const app = express();
-
-// SSL certificates
-let keyPath = path.join(__dirname, "key.pem");
-let certPath = path.join(__dirname, "cert.pem");
-
-const options = {
-  key: fs.readFileSync(keyPath),
-  cert: fs.readFileSync(certPath),
-};
 
 // Serve static files
 app.use(express.static("./"));
 
-// Create HTTPS server
-const server = https.createServer(options, app);
+// Create HTTP server
+const server = http.createServer(app);
 
-// Attach socket.io to the HTTPS server
+// Attach socket.io to the HTTP server
 const io = new Server(server);
 
-
 let players = {}; // Store player data by socket ID
+
 // Handle socket.io connections
 io.on("connection", (socket) => {
   console.log("A player connected:", socket.id);
@@ -34,9 +23,9 @@ io.on("connection", (socket) => {
   players[socket.id] = {
     x: Math.random() * 800, // Random starting position
     y: Math.random() * -1,
-    state: "idle right", // initial state of the client is idle
+    state: "idle right", // Initial state of the client is idle
     health: 10,
-    playerName: socket.handshake.query.playerName, // the character the client choose
+    playerName: socket.handshake.query.playerName, // The character the client chose
     fireCoolDown: socket.handshake.query.fireCoolDown, // fireCoolDown for that particular character
     Damage: socket.handshake.query.Damage,
   };
@@ -78,8 +67,8 @@ io.on("connection", (socket) => {
   });
 });
 
-// Start the server
-const PORT = 8080;
-server.listen(PORT, "26.229.37.155", () => {
-  console.log(`Server is running at https://26.229.37.155:${PORT}`);
+// Use environment variables for dynamic port
+const PORT = process.env.PORT || 8080; // Default to 8080 for local testing
+server.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
 });
