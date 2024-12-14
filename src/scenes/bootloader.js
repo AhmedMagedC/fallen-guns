@@ -6,11 +6,12 @@ export class BootLoader extends Phaser.Scene {
     const characters = ["Gangsters_1", "Gangsters_2", "Raider_1"]; // currently available characters in the game
     for (const char of characters) this.loadCharacterAssets(char);
     this.load.image(
-      "background",
-      "../../public/assets/Backgrounds/Background.png"
+      "sky forest",
+      "../../public/assets/Backgrounds/sky forest.png"
     );
     this.load.image("bullet", "../../public/assets/Bullets/bullet.png");
-    this.load.image("platform", "../../public/assets/platform.jpg");
+    this.load.image("green ground", "../../public/assets/platforms/green ground.jpg");
+    this.load.image("blood particle", "../../public/assets/particles/blood particle.png");
   }
   create() {
     this.scene.start("mainmenu"); // Switch to FirstScene

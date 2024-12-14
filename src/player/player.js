@@ -167,7 +167,17 @@ export class Player extends Phaser.GameObjects.Sprite {
   }
 
   gotHit() {
-    this.currentState = `hurt ${this.currentState.split(" ")[1]}`;
-    this.playAnim(this.currentState);
+    const bloodEmitter = this.scene.add.particles(
+      this.x,
+      this.y+15,
+      "blood particle",
+      {
+        lifespan: 500,
+        speed: { min: -300, max: 300 },
+        scale: { start: 0.5, end: 0 },
+
+      }
+    );
+    bloodEmitter.explode(3);
   }
 }

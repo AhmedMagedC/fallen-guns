@@ -92,11 +92,14 @@ export class FirstScene extends Phaser.Scene {
       Object.keys(this.players).forEach((id) => {
         if (newBullet.y == -1 && newBullet.srcID != id) {
           // dont create a bullet if it's the shotgun player (make the bullet go out of boundries), instead collide if the enemey is 70m far from the player
-          const distanceFromSrcPlayer =
+          const XdistanceFromSrcPlayer =
             this.players[id].x - this.players[newBullet.srcID].x;
+          const YdistanceFromSrcPlayer =
+            this.players[id].y - this.players[newBullet.srcID].y;
           if (
-            distanceFromSrcPlayer * newBullet.x >= 0 && //newBullet.x to determine the direction of the gun
-            distanceFromSrcPlayer * newBullet.x <= 70
+            XdistanceFromSrcPlayer * newBullet.x >= 0 && //newBullet.x to determine the direction of the gun
+            XdistanceFromSrcPlayer * newBullet.x <= 90 &&
+            Math.abs(YdistanceFromSrcPlayer) <= 30
           ) {
             this.players[id].gotHit();
 
@@ -143,7 +146,7 @@ export class FirstScene extends Phaser.Scene {
     }
   }
   createBackGround() {
-    const background = this.add.image(0, 0, "background");
+    const background = this.add.image(0, 0, "sky forest");
 
     background.setOrigin(0, 0.4);
     let scaleX = this.scale.width / background.width; // Scale based on screen width
@@ -154,20 +157,18 @@ export class FirstScene extends Phaser.Scene {
   }
   createGrounds(grounds) {
     grounds[0] = this.physics.add
-      .staticImage(0, 250, "platform")
+      .staticImage(0, 250, "green ground")
       .setScale(0.06)
       .refreshBody();
 
     grounds[1] = this.physics.add
-      .staticImage(this.scale.width, 250, "platform")
+      .staticImage(this.scale.width, 250, "green ground")
       .setScale(0.07)
       .refreshBody();
 
     grounds[2] = this.physics.add
-      .staticImage(this.scale.width / 2, 450, "platform")
-      .setScale(0.17,0.07)
+      .staticImage(this.scale.width / 2, 450, "green ground")
+      .setScale(0.17, 0.07)
       .refreshBody();
   }
-
-
 }

@@ -11,6 +11,9 @@ export class Anim {
     this.id = id;
     this.name = gameObjName;
     this.scene = scene;
+    if (this.name == "Gangsters_2")
+      this.gunBuff = 10; // make the fire animation for gang2 faster
+    else this.gunBuff = 0;
   }
 
   createAnim() {
@@ -125,7 +128,7 @@ export class Anim {
             .length - 1,
         end: 0,
       }),
-      frameRate: 10,
+      frameRate: 10 + this.gunBuff,
       repeat: 0,
     });
 
@@ -137,7 +140,7 @@ export class Anim {
           this.scene.textures.get(`${this.name}_shot_right`).getFrameNames()
             .length - 1,
       }),
-      frameRate: 10,
+      frameRate: 10 + this.gunBuff,
       repeat: 0,
     });
 

@@ -35,7 +35,7 @@ io.on("connection", (socket) => {
     x: Math.random() * 800, // Random starting position
     y: Math.random() * -1,
     state: "idle right", // initial state of the client is idle
-    health: 10,
+    health: 10000,
     playerName: socket.handshake.query.playerName, // the character the client choose
     fireCoolDown: socket.handshake.query.fireCoolDown, // fireCoolDown for that particular character
     Damage: socket.handshake.query.Damage,

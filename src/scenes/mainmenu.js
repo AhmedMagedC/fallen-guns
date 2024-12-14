@@ -6,11 +6,11 @@ export class MainMenu extends Phaser.Scene {
     });
   }
   preload() {
-    this.load.image("play button", "../../public/assets/play button.png");
+    this.load.image("play button", "../../public/assets/UI/play button.png");
   }
   create() {
     const characters = ["Gangsters_1", "Gangsters_2", "Raider_1"]; // currently available characters in the game
-    const fireCoolDown = { Gangsters_1: 100, Gangsters_2: 800, Raider_1: 200 }; // cool down between shots for every characater
+    const fireCoolDown = { Gangsters_1: 100, Gangsters_2: 250, Raider_1: 200 }; // cool down between shots for every characater
     const Damage = { Gangsters_1: 2, Gangsters_2: 6, Raider_1: 4 }; // each character's damage
 
     let initX = 300,
