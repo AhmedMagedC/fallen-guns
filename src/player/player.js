@@ -56,19 +56,13 @@ export class Player extends Phaser.GameObjects.Sprite {
     });
   }
   updateMovement() {
-    if (
-      this.anims.isPlaying &&
-      this.anims.currentAnim.key.split(" ")[1] === "hurt"
-    )
-      return; //if its the hurt animation then it must finish playing first before any other animation
     if (!this.body.touching.down) {
       if (this.cursor.up.isDown && this.canDoubleJump) this.doubleJump();
 
-      if (this.cursor.right.isDown) this.moveRightInAir();
+      if (this.keys.f.isDown) this.Fire();
+      else if (this.cursor.right.isDown) this.moveRightInAir();
       else if (this.cursor.left.isDown) this.moveLeftInAir();
       else this.idleInAir();
-
-      this.playAnim(this.currentState);
     } else {
       this.canDoubleJump = true;
       if (this.keys.f.isDown) this.Fire();
@@ -136,6 +130,7 @@ export class Player extends Phaser.GameObjects.Sprite {
     this.currentState = `${
       this.currentState.split(" ")[0] == "dbljump" ? "dbljump" : "jump" // while in air , we either set and play jump or double jump animation
     } right`;
+    this.playAnim(this.currentState);
   }
 
   moveLeftInAir() {
@@ -143,6 +138,7 @@ export class Player extends Phaser.GameObjects.Sprite {
     this.currentState = `${
       this.currentState.split(" ")[0] == "dbljump" ? "dbljump" : "jump" // while in air , we either set and play jump or double jump animation
     } left`;
+    this.playAnim(this.currentState);
   }
 
   idleInAir() {
@@ -151,10 +147,11 @@ export class Player extends Phaser.GameObjects.Sprite {
     this.currentState = `${
       this.currentState.split(" ")[0] == "dbljump" ? "dbljump" : "jump"
     } ${this.currentState.split(" ")[1]}`;
+    this.playAnim(this.currentState);
   }
 
   Fire() {
-    this.body.setVelocityX(0);
+    if (this.body.touching.down) this.body.setVelocityX(0); // only stops moving if your on the ground
     this.currentState = `shot ${this.currentState.split(" ")[1]}`;
     this.playAnim(this.currentState);
   }
@@ -173,6 +170,4 @@ export class Player extends Phaser.GameObjects.Sprite {
     this.currentState = `hurt ${this.currentState.split(" ")[1]}`;
     this.playAnim(this.currentState);
   }
-
-
 }

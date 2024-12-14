@@ -80,6 +80,6 @@ io.on("connection", (socket) => {
 
 // Start the server
 const PORT = 8080;
-server.listen(PORT, "26.229.37.155", () => {
-  console.log(`Server is running at https://26.229.37.155:${PORT}`);
+server.listen(PORT, "192.168.1.6", () => {
+  console.log(`Server is running at https://192.168.1.6:${PORT}`);
 });
