@@ -24,23 +24,19 @@ const server = https.createServer(options, app);
 // Attach socket.io to the HTTPS server
 const io = new Server(server);
 
-
 let players = {}; // Store player data by socket ID
 // Handle socket.io connections
 io.on("connection", (socket) => {
   console.log("A player connected:", socket.id);
 
   // Add new player to the list
+  const charStats = JSON.parse(socket.handshake.query.charStats);
   players[socket.id] = {
     x: Math.random() * 800, // Random starting position
     y: Math.random() * -1,
     state: "idle right", // initial state of the client is idle
-    health: 10000,
-    playerName: socket.handshake.query.playerName, // the character the client choose
-    fireCoolDown: socket.handshake.query.fireCoolDown, // fireCoolDown for that particular character
-    Damage: socket.handshake.query.Damage,
+    charStats,
   };
-
   // Notify all clients of the new player list
   io.emit("playerData", players);
 
@@ -68,13 +64,12 @@ io.on("connection", (socket) => {
   });
 
   socket.on("createBullet", (bullet) => {
-    this.bullet = bullet;
     io.emit("syncBullet", bullet);
   });
 
   socket.on("playerGotHit", (id, srcID) => {
-    players[id].health -= players[srcID].Damage;
-    io.emit("playerGotHitSync", id, players[id].health);
+    players[id].charStats.health -= players[srcID].charStats.damage;
+    io.emit("playerGotHitSync", id, players[id].charStats.health);
   });
 });
 

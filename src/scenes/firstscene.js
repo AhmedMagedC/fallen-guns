@@ -15,11 +15,11 @@ export class FirstScene extends Phaser.Scene {
     this.createGrounds(grounds);
 
     this.players = {}; // Store all players
+
+    const charStats = JSON.stringify(this.scene.settings.data.charStats);
     this.socket = io({
       query: {
-        playerName: this.scene.settings.data.name,
-        fireCoolDown: this.scene.settings.data.fireCoolDown,
-        Damage: this.scene.settings.data.Damage,
+        charStats,
       },
     }); // Connect to the server
 
@@ -29,16 +29,16 @@ export class FirstScene extends Phaser.Scene {
         if (!this.players[id]) {
           const { x, y } = players[id];
           const currentState = players[id].state;
-          const playerName = players[id].playerName;
-          const fireCoolDown = players[id].fireCoolDown;
           this.players[id] = new Player(
             this,
             id,
             x,
             y,
             currentState,
-            playerName,
-            fireCoolDown
+            players[id].charStats.name,
+            players[id].charStats.bulletTime,
+            players[id].charStats.ammo,
+            players[id].charStats.gunType
           );
           this.players[id].body.setSize(30, 80); // Adjust size for proper hitbox
           this.players[id].body.setOffset(45, 50); // Adjust Offset for proper hitbox

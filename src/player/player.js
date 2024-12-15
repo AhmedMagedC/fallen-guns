@@ -1,14 +1,16 @@
 import { Anim } from "../animation/animation.js";
 
 export class Player extends Phaser.GameObjects.Sprite {
-  constructor(scene, playerID, x, y, state, name, fireCooldown) {
+  constructor(scene, playerID, x, y, state, name, bulletTime, ammo, gunType) {
     super(scene, x, y);
     this.scene = scene;
     this.name = name;
     this.id = playerID;
     this.currentState = state;
     this.animation = new Anim(this.id, this.scene, this.name);
-    this.fireCooldown = fireCooldown; // cooldown between shots
+    this.bulletTime = bulletTime; // the time at which the bullet goes out of the gun (to sync with the animation)
+    this.ammo = ammo;
+    this.gunType = gunType;
     this.init();
   }
   init() {
@@ -24,7 +26,8 @@ export class Player extends Phaser.GameObjects.Sprite {
     this.keys = this.scene.input.keyboard.addKeys({
       f: Phaser.Input.Keyboard.KeyCodes.F,
     });
-
+    this.bulletIcon = []; // the icon of bullets at the top left of the scene
+    this.createBulletsUI(); // to create these icons
     this.on("animationstart", (animation) => {
       // get the timestap of the fire animation
 
@@ -39,7 +42,7 @@ export class Player extends Phaser.GameObjects.Sprite {
       // to apply the cooldown between shots
       const elapsedTime = this.scene.time.now - this.startAnimationtime;
       if (animation.key.split(" ")[1] == "shot") {
-        if (elapsedTime >= this.fireCooldown && this.startAnimationtime) {
+        if (elapsedTime >= this.bulletTime && this.startAnimationtime) {
           const facingLeft = this.currentState.split(" ")[1] == "left" ? -1 : 1; //direction determination
           this.startAnimationtime = null;
 
@@ -151,12 +154,18 @@ export class Player extends Phaser.GameObjects.Sprite {
   }
 
   Fire() {
+    if (this.ammo <= 0) return;
+
     if (this.body.touching.down) this.body.setVelocityX(0); // only stops moving if your on the ground
     this.currentState = `shot ${this.currentState.split(" ")[1]}`;
     this.playAnim(this.currentState);
   }
 
   createBullet(x, y, velocityX) {
+    this.ammo--;
+    if (this.id == this.scene.socket.id) {
+      this.bulletIcon[this.ammo + 1].destroy();
+    }
     this.scene.socket.emit("createBullet", {
       // notify the server for the bullet just fired
       x: x,
@@ -169,15 +178,28 @@ export class Player extends Phaser.GameObjects.Sprite {
   gotHit() {
     const bloodEmitter = this.scene.add.particles(
       this.x,
-      this.y+15,
+      this.y + 15,
       "blood particle",
       {
         lifespan: 500,
         speed: { min: -300, max: 300 },
         scale: { start: 0.5, end: 0 },
-
       }
     );
     bloodEmitter.explode(3);
+  }
+
+  createBulletsUI() {
+    if (this.id == this.scene.socket.id) {
+      // create bullets icon for the main player only (the one that connected to the socket)
+      let initX = 15;
+      for (let bullet = 1; bullet <= this.ammo; bullet++) {
+        this.bulletIcon[bullet] = this.scene.add
+          .image(initX, 10, `${this.gunType} ammo`)
+          .setScale(1);
+
+        initX += 50;
+      }
+    }
   }
 }
