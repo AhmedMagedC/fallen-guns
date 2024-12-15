@@ -1,3 +1,5 @@
+import { characterStats } from "../model/characters.js";
+
 let selectedChar = null;
 export class MainMenu extends Phaser.Scene {
   constructor() {
@@ -6,23 +8,20 @@ export class MainMenu extends Phaser.Scene {
     });
   }
   preload() {
-    this.load.image("play button", "../../public/assets/play button.png");
+    this.load.image("play button", "../../public/assets/UI/play button.png");
   }
   create() {
-    const characters = ["Gangsters_1", "Gangsters_2", "Raider_1"]; // currently available characters in the game
-    const fireCoolDown = { Gangsters_1: 100, Gangsters_2: 800, Raider_1: 200 }; // cool down between shots for every characater
-    const Damage = { Gangsters_1: 2, Gangsters_2: 6, Raider_1: 4 }; // each character's damage
-
     let initX = 300,
       InitY = 300;
 
-    characters.forEach((char) => {
-      const character = this.add.image(initX, InitY, char).setInteractive();
+    characterStats.forEach((char) => {
+      const key = Object.keys(char)[0];
+      const character = this.add.image(initX, InitY, key).setInteractive();
       character.setScale(2);
-      character.name = char;
+      character.charStats = char[key];
 
       character.on("pointerdown", () =>
-        this.selectCharacter.call(this, character, fireCoolDown, Damage)
+        this.selectCharacter.call(this, character)
       );
       initX += 300;
     });
@@ -35,7 +34,7 @@ export class MainMenu extends Phaser.Scene {
       .setOrigin(0.5);
   }
 
-  selectCharacter(character, fireCoolDown, Damage) {
+  selectCharacter(character) {
     // Remove highlight from previously selected character
     if (selectedChar) {
       selectedChar.setTint(0xffffff); // Reset color
@@ -51,9 +50,7 @@ export class MainMenu extends Phaser.Scene {
     playButton.setScale(0.2);
     playButton.on("pointerdown", () => {
       this.scene.start("firstscene", {
-        name: selectedChar.name,
-        fireCoolDown: fireCoolDown[selectedChar.name],
-        Damage: Damage[selectedChar.name],
+        charStats: selectedChar.charStats,
       });
     });
   }
