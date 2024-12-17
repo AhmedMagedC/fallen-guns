@@ -10,6 +10,7 @@ export class Player extends Phaser.GameObjects.Sprite {
     this.animation = new Anim(this.id, this.scene, this.name);
     this.bulletTime = bulletTime; // the time at which the bullet goes out of the gun (to sync with the animation)
     this.ammo = ammo;
+    this.reshargedAmmo = ammo;
     this.gunType = gunType;
     this.init();
   }
@@ -177,6 +178,7 @@ export class Player extends Phaser.GameObjects.Sprite {
 
   gotHit() {
     const bloodEmitter = this.scene.add.particles(
+      // emit blood particles
       this.x,
       this.y + 15,
       "blood particle",
@@ -194,12 +196,18 @@ export class Player extends Phaser.GameObjects.Sprite {
       // create bullets icon for the main player only (the one that connected to the socket)
       let initX = 15;
       for (let bullet = 1; bullet <= this.ammo; bullet++) {
+        if (this.bulletIcon[bullet]) this.bulletIcon[bullet].destroy();
         this.bulletIcon[bullet] = this.scene.add
           .image(initX, 10, `${this.gunType} ammo`)
           .setScale(1);
 
-        initX += 50;
+        initX += 25;
       }
     }
+  }
+
+  reshargeAmmo() {
+    this.ammo = this.reshargedAmmo;
+    this.createBulletsUI();
   }
 }

@@ -73,8 +73,13 @@ io.on("connection", (socket) => {
   });
 });
 
+setInterval(() => {
+  // respawn an ammo crate every 5 seconds
+  io.emit("createAmmoCrate", Math.random() * 1500); // random X pos
+}, 10000);
+
 // Start the server
 const PORT = 8080;
-server.listen(PORT, "192.168.1.6", () => {
-  console.log(`Server is running at https://192.168.1.6:${PORT}`);
+server.listen(PORT, "26.229.37.155", () => {
+  console.log(`Server is running at https://26.229.37.155:${PORT}`);
 });
