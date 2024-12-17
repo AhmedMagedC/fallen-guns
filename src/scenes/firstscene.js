@@ -92,14 +92,14 @@ export class FirstScene extends Phaser.Scene {
       Object.keys(this.players).forEach((id) => {
         if (newBullet.y == -1 && newBullet.srcID != id) {
           // dont create a bullet if it's the shotgun player (make the bullet go out of boundries), instead collide if the enemey is 70m far from the player
-          const XdistanceFromSrcPlayer =
+          const xDistanceFromSrcPlayer =
             this.players[id].x - this.players[newBullet.srcID].x;
-          const YdistanceFromSrcPlayer =
+          const yDistanceFromSrcPlayer =
             this.players[id].y - this.players[newBullet.srcID].y;
           if (
-            XdistanceFromSrcPlayer * newBullet.x >= 0 && //newBullet.x to determine the direction of the gun
-            XdistanceFromSrcPlayer * newBullet.x <= 90 &&
-            Math.abs(YdistanceFromSrcPlayer) <= 30
+            xDistanceFromSrcPlayer * newBullet.x >= 0 && //newBullet.x to determine the direction of the gun
+            xDistanceFromSrcPlayer * newBullet.x <= 110 &&
+            Math.abs(yDistanceFromSrcPlayer) <= 50
           ) {
             this.players[id].gotHit();
 
@@ -126,6 +126,27 @@ export class FirstScene extends Phaser.Scene {
 
     this.socket.on("playerGotHitSync", (id, curHealth) => {
       if (curHealth <= 0) this.players[id].destroy();
+    });
+
+    this.socket.on("createAmmoCrate", (posX) => {
+      // respawns an ammo crate when the server says so
+      const ammoCrate = this.physics.add
+        .sprite(posX, 0, "ammo crate")
+        .setScale(0.15);
+
+      ammoCrate.setAngularVelocity(500);
+      ammoCrate.body.setAllowGravity(false); // disable global gravity to customize velocity 200
+      ammoCrate.setVelocityY(200); // Lower gravity for slower falling
+
+      Object.keys(this.players).forEach((id) => {
+        // make crate overlap with players
+        this.physics.add.overlap(this.players[id], ammoCrate, () => {
+          ammoCrate.destroy();
+
+          if (id == this.socket.id) this.players[id].reshargeAmmo(); // resharge ammo for the main player only
+          
+        });
+      });
     });
   }
   update() {

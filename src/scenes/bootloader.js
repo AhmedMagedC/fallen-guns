@@ -14,6 +14,7 @@ export class BootLoader extends Phaser.Scene {
       "../../public/assets/Backgrounds/sky forest.png"
     );
     this.load.image("bullet", "../../public/assets/Bullets/bullet.png");
+    this.load.image("ammo crate", "../../public/assets/Bullets/ammo crate.png");
     this.load.image(
       "green ground",
       "../../public/assets/platforms/green ground.jpg"
