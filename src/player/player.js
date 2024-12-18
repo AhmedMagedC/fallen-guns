@@ -29,6 +29,7 @@ export class Player extends Phaser.GameObjects.Sprite {
     });
     this.bulletIcon = []; // the icon of bullets at the top left of the scene
     this.createBulletsUI(); // to create these icons
+    this.healthPointsIcon = []; // the icon of health points at the top right of the scene
     this.on("animationstart", (animation) => {
       // get the timestap of the fire animation
 
@@ -60,17 +61,17 @@ export class Player extends Phaser.GameObjects.Sprite {
     });
   }
   updateMovement() {
+    if (this.keys.f.isDown) this.Fire();
+
     if (!this.body.touching.down) {
       if (this.cursor.up.isDown && this.canDoubleJump) this.doubleJump();
 
-      if (this.keys.f.isDown) this.Fire();
-      else if (this.cursor.right.isDown) this.moveRightInAir();
+      if (this.cursor.right.isDown) this.moveRightInAir();
       else if (this.cursor.left.isDown) this.moveLeftInAir();
       else this.idleInAir();
     } else {
       this.canDoubleJump = true;
-      if (this.keys.f.isDown) this.Fire();
-      else if (this.cursor.right.isDown) {
+      if (this.cursor.right.isDown) {
         if (this.cursor.up.isDown) this.jumpRight();
         else this.runRight();
       } else if (this.cursor.left.isDown) {
@@ -87,50 +88,90 @@ export class Player extends Phaser.GameObjects.Sprite {
 
   runRight() {
     this.body.setVelocityX(this.speedX);
+    if (this.keys.f.isDown) {
+      // priority for the shoot animation first
+      this.currentState = "shot right";
+      return;
+    }
     this.currentState = "run right";
     this.playAnim("run right");
   }
 
   runLeft() {
     this.body.setVelocityX(-this.speedX);
+    if (this.keys.f.isDown) {
+      // priority for the shoot animation first
+      this.currentState = "shot left";
+      return;
+    }
     this.currentState = "run left";
     this.playAnim("run left");
   }
 
   jumpRight() {
-    this.currentState = "jump right";
     this.body.setVelocityX(this.speedX);
     this.body.setVelocityY(-this.speedY);
     this.cursor.up.isDown = false; // necessary to play the first jump animation , without it double jump animation would be fired
+    if (this.keys.f.isDown) {
+      // priority for the shoot animation first
+      this.currentState = "shot right";
+      return;
+    }
+    this.currentState = "jump right";
   }
 
   jumpLeft() {
-    this.currentState = "jump left";
     this.body.setVelocityX(-this.speedX);
     this.body.setVelocityY(-this.speedY);
     this.cursor.up.isDown = false;
+    if (this.keys.f.isDown) {
+      // priority for the shoot animation first
+      this.currentState = "shot left";
+      return;
+    }
+    this.currentState = "jump left";
   }
 
   jump() {
-    this.currentState = `jump ${this.currentState.split(" ")[1]}`;
     this.body.setVelocityY(-this.speedY);
     this.cursor.up.isDown = false;
+    if (this.keys.f.isDown) {
+      // priority for the shoot animation first
+      this.currentState = `shot ${this.currentState.split(" ")[1]}`;
+      return;
+    }
+    this.currentState = `jump ${this.currentState.split(" ")[1]}`;
   }
 
   idle() {
-    this.currentState = `idle ${this.currentState.split(" ")[1]}`;
     this.body.setVelocityX(0);
+    if (this.keys.f.isDown) {
+      // priority for the shoot animation first
+      this.currentState = `shot ${this.currentState.split(" ")[1]}`;
+      return;
+    }
+    this.currentState = `idle ${this.currentState.split(" ")[1]}`;
     this.playAnim(this.currentState);
   }
 
   doubleJump() {
-    this.canDoubleJump = false;
     this.body.setVelocityY(-this.speedY);
+    this.canDoubleJump = false;
+    if (this.keys.f.isDown) {
+      // priority for the shoot animation first
+      this.currentState = `shot ${this.currentState.split(" ")[1]}`;
+      return;
+    }
     this.currentState = `dbljump ${this.currentState.split(" ")[1]}`;
   }
 
   moveRightInAir() {
     this.body.setVelocityX(this.speedX);
+    if (this.keys.f.isDown) {
+      // priority for the shoot animation first
+      this.currentState = `shot right`;
+      return;
+    }
     this.currentState = `${
       this.currentState.split(" ")[0] == "dbljump" ? "dbljump" : "jump" // while in air , we either set and play jump or double jump animation
     } right`;
@@ -139,6 +180,11 @@ export class Player extends Phaser.GameObjects.Sprite {
 
   moveLeftInAir() {
     this.body.setVelocityX(-this.speedX);
+    if (this.keys.f.isDown) {
+      // priority for the shoot animation first
+      this.currentState = `shot left`;
+      return;
+    }
     this.currentState = `${
       this.currentState.split(" ")[0] == "dbljump" ? "dbljump" : "jump" // while in air , we either set and play jump or double jump animation
     } left`;
@@ -148,6 +194,11 @@ export class Player extends Phaser.GameObjects.Sprite {
   idleInAir() {
     // being idle in air
     this.body.setVelocityX(0);
+    if (this.keys.f.isDown) {
+      // priority for the shoot animation first
+      this.currentState = `shot ${this.currentState.split(" ")[1]}`;
+      return;
+    }
     this.currentState = `${
       this.currentState.split(" ")[0] == "dbljump" ? "dbljump" : "jump"
     } ${this.currentState.split(" ")[1]}`;
@@ -155,9 +206,11 @@ export class Player extends Phaser.GameObjects.Sprite {
   }
 
   Fire() {
-    if (this.ammo <= 0) return;
+    if (this.ammo <= 0) {
+      this.keys.f.isDown = false; //unable the user to press F incase of no ammo
+      return;
+    }
 
-    if (this.body.touching.down) this.body.setVelocityX(0); // only stops moving if your on the ground
     this.currentState = `shot ${this.currentState.split(" ")[1]}`;
     this.playAnim(this.currentState);
   }
@@ -209,5 +262,20 @@ export class Player extends Phaser.GameObjects.Sprite {
   reshargeAmmo() {
     this.ammo = this.reshargedAmmo;
     this.createBulletsUI();
+  }
+
+  updateHealthPointsUI(health) {
+    if (this.id == this.scene.socket.id) {
+      this.healthPointsIcon.forEach((h) => h.destroy()); // clear health icons first
+
+      let initX = this.scene.scale.width - 15;
+      for (let h = 1; h <= health; h++) {
+        this.healthPointsIcon[h] = this.scene.add
+          .image(initX, 10, `health crate`)
+          .setScale(1);
+
+        initX -= 25;
+      }
+    }
   }
 }
