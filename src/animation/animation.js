@@ -7,10 +7,11 @@ it's determined by using <characterName>_<state>_<facingRightOrLeft>
 // animations are preloaded in bootloader.js
 
 export class Anim {
-  constructor(id, scene, gameObjName) {
+  constructor(id, scene, gameObjName, numOfAttacks) {
     this.id = id;
     this.name = gameObjName;
     this.scene = scene;
+    this.numOfAttacks = numOfAttacks;
     if (this.name == "Gangsters_2")
       this.gunBuff = 10; // make the fire animation for gang2 faster
     else this.gunBuff = 0;
@@ -119,53 +120,38 @@ export class Anim {
       frameRate: 10,
       repeat: 0,
     });
+    for (let shot = 0; shot < this.numOfAttacks; shot++) {
+      this.scene.anims.create({
+        key: `${this.id} shot left ${shot}`,
+        frames: this.scene.anims.generateFrameNumbers(
+          `${this.name}_shot_left_${shot}`,
+          {
+            start:
+              this.scene.textures
+                .get(`${this.name}_shot_left_${shot}`)
+                .getFrameNames().length - 1,
+            end: 0,
+          }
+        ),
+        frameRate: 10 + this.gunBuff,
+        repeat: 0,
+      });
 
-    this.scene.anims.create({
-      key: `${this.id} shot left`,
-      frames: this.scene.anims.generateFrameNumbers(`${this.name}_shot_left`, {
-        start:
-          this.scene.textures.get(`${this.name}_shot_left`).getFrameNames()
-            .length - 1,
-        end: 0,
-      }),
-      frameRate: 10 + this.gunBuff,
-      repeat: 0,
-    });
-
-    this.scene.anims.create({
-      key: `${this.id} shot right`,
-      frames: this.scene.anims.generateFrameNumbers(`${this.name}_shot_right`, {
-        start: 0,
-        end:
-          this.scene.textures.get(`${this.name}_shot_right`).getFrameNames()
-            .length - 1,
-      }),
-      frameRate: 10 + this.gunBuff,
-      repeat: 0,
-    });
-
-    this.scene.anims.create({
-      key: `${this.id} hurt right`,
-      frames: this.scene.anims.generateFrameNumbers(`${this.name}_hurt_right`, {
-        start: 0,
-        end:
-          this.scene.textures.get(`${this.name}_hurt_right`).getFrameNames()
-            .length - 1,
-      }),
-      frameRate: 10,
-      repeat: 0,
-    });
-
-    this.scene.anims.create({
-      key: `${this.id} hurt left`,
-      frames: this.scene.anims.generateFrameNumbers(`${this.name}_hurt_left`, {
-        start:
-          this.scene.textures.get(`${this.name}_hurt_left`).getFrameNames()
-            .length - 1,
-        end: 0,
-      }),
-      frameRate: 10,
-      repeat: 0,
-    });
+      this.scene.anims.create({
+        key: `${this.id} shot right ${shot}`,
+        frames: this.scene.anims.generateFrameNumbers(
+          `${this.name}_shot_right_${shot}`,
+          {
+            start: 0,
+            end:
+              this.scene.textures
+                .get(`${this.name}_shot_right_${shot}`)
+                .getFrameNames().length - 1,
+          }
+        ),
+        frameRate: 10 + this.gunBuff,
+        repeat: 0,
+      });
+    }
   }
 }

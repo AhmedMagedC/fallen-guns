@@ -38,10 +38,16 @@ export class FirstScene extends Phaser.Scene {
             players[id].charStats.name,
             players[id].charStats.bulletTime,
             players[id].charStats.ammo,
-            players[id].charStats.gunType
+            players[id].charStats.gunType,
+            players[id].charStats.numOfAnimationAttack
           );
-          this.players[id].body.setSize(30, 80); // Adjust size for proper hitbox
-          this.players[id].body.setOffset(45, 50); // Adjust Offset for proper hitbox
+          this.players[id].setScale(players[id].charStats.scale);
+          this.players[id].body.setSize(
+            // Adjust size for proper hitbox
+            players[id].charStats.hitbox.sizeX,
+            players[id].charStats.hitbox.sizeY
+          );
+          this.players[id].body.setOffset(45,45); // Adjust Offset for proper hitbox
           this.players[id].updateHealthPointsUI(players[id].charStats.health); // at first join , create health points at the top right corner (only for the main player (the one that initiate the socket connection))
           this.players[id].playAnim(currentState);
           grounds.forEach((ground) => {
@@ -88,7 +94,7 @@ export class FirstScene extends Phaser.Scene {
       const bullet = this.physics.add.image(newBullet.x, newBullet.y, "bullet");
       bullet.body.setVelocityX(newBullet.velocityX);
       bullet.body.setAllowGravity(false);
-      this.players[newBullet.srcID].fireSound.play();
+      this.players[newBullet.srcID].playFireSound();
 
       Object.keys(this.players).forEach((id) => {
         if (newBullet.y == -1 && newBullet.srcID != id) {
@@ -127,7 +133,7 @@ export class FirstScene extends Phaser.Scene {
 
     this.socket.on("playerGotHitSync", (id, curHealth) => {
       this.players[id].updateHealthPointsUI(curHealth);
-      // if (curHealth <= 0) this.players[id].destroy();
+      if (curHealth <= 0) this.players[id].destroy();
     });
 
     this.socket.on("createAmmoCrate", (posX) => {

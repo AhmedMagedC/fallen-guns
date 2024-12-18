@@ -1,17 +1,30 @@
 import { Anim } from "../animation/animation.js";
 
 export class Player extends Phaser.GameObjects.Sprite {
-  constructor(scene, playerID, x, y, state, name, bulletTime, ammo, gunType) {
+  constructor(
+    scene,
+    playerID,
+    x,
+    y,
+    state,
+    name,
+    bulletTime,
+    ammo,
+    gunType,
+    numOfAttacks
+  ) {
     super(scene, x, y);
     this.scene = scene;
     this.name = name;
     this.id = playerID;
     this.currentState = state;
-    this.animation = new Anim(this.id, this.scene, this.name);
+    this.animation = new Anim(this.id, this.scene, this.name, numOfAttacks);
     this.bulletTime = bulletTime; // the time at which the bullet goes out of the gun (to sync with the animation)
     this.ammo = ammo;
     this.reshargedAmmo = ammo;
     this.gunType = gunType;
+    this.numOfAttacks = numOfAttacks; //number of animation attacks
+    this.attackIndx = 0;
     this.init();
   }
   init() {
@@ -21,7 +34,12 @@ export class Player extends Phaser.GameObjects.Sprite {
     this.scene.add.existing(this); // add player to the scene
     this.scene.physics.add.existing(this); // add physics to the player
     this.canDoubleJump = false; // to detect the player did only a one double jump
-    this.fireSound = this.scene.sound.add(`${this.name}_gun_sound`); // sound of the gun
+    this.fireSound = []; // sound of the gun
+    for (let sound = 0; sound < this.numOfAttacks; sound++) {
+      this.fireSound[sound] = this.scene.sound.add(
+        `${this.name}_gun_sound_${sound}`
+      );
+    }
     this.body.setCollideWorldBounds(true);
     this.cursor = this.scene.input.keyboard.createCursorKeys();
     this.keys = this.scene.input.keyboard.addKeys({
@@ -48,19 +66,28 @@ export class Player extends Phaser.GameObjects.Sprite {
           const facingLeft = this.currentState.split(" ")[1] == "left" ? -1 : 1; //direction determination
           this.startAnimationtime = null;
 
-          this.createBullet(
-            // dont create a bullet if it's the shotgun player (Raider_1) (make the bullet go out of boundries)
-            this.name != "Raider_1" ? this.x + 20 * facingLeft : facingLeft, // adjust the bullet init position (so it looks as if it's coming out from the gun)
-            this.name != "Raider_1"
-              ? this.y + (this.name == "Gangsters_2" ? 10 : 25)
-              : -1,
-            2000 * facingLeft
-          );
+          const bulletX = this.canCreateBullet() // dont create a bullet if it's the shotgun player or sword player (make the bullet go out of boundries)
+            ? this.x + 20 * facingLeft
+            : facingLeft;
+          const bulletY = this.canCreateBullet()
+            ? this.y + (this.gunType == "pistol" ? 10 : 25) // some special handling for the pistol player (to make the bullet as if it comes from the gun)
+            : -1;
+          const bulletVelocity = 2000 * facingLeft;
+
+          this.createBullet(bulletX, bulletY, bulletVelocity);
         }
       }
     });
+    this.on("animationcomplete", (animation) => {
+      if (
+        animation.key.split(" ")[1] == "shot" &&
+        this.scene.socket.id == this.id
+      )
+        this.attackIndx = (this.attackIndx + 1) % this.numOfAttacks; // apply the next attack && sound
+    });
   }
   updateMovement() {
+    console.log(this.keys.f.isDown);
     if (this.keys.f.isDown) this.Fire();
 
     if (!this.body.touching.down) {
@@ -90,7 +117,7 @@ export class Player extends Phaser.GameObjects.Sprite {
     this.body.setVelocityX(this.speedX);
     if (this.keys.f.isDown) {
       // priority for the shoot animation first
-      this.currentState = "shot right";
+      this.currentState = `shot right ${this.attackIndx}`;
       return;
     }
     this.currentState = "run right";
@@ -101,7 +128,7 @@ export class Player extends Phaser.GameObjects.Sprite {
     this.body.setVelocityX(-this.speedX);
     if (this.keys.f.isDown) {
       // priority for the shoot animation first
-      this.currentState = "shot left";
+      this.currentState = `shot left ${this.attackIndx}`;
       return;
     }
     this.currentState = "run left";
@@ -114,7 +141,7 @@ export class Player extends Phaser.GameObjects.Sprite {
     this.cursor.up.isDown = false; // necessary to play the first jump animation , without it double jump animation would be fired
     if (this.keys.f.isDown) {
       // priority for the shoot animation first
-      this.currentState = "shot right";
+      this.currentState = `shot right ${this.attackIndx}`;
       return;
     }
     this.currentState = "jump right";
@@ -126,7 +153,7 @@ export class Player extends Phaser.GameObjects.Sprite {
     this.cursor.up.isDown = false;
     if (this.keys.f.isDown) {
       // priority for the shoot animation first
-      this.currentState = "shot left";
+      this.currentState = `shot left ${this.attackIndx}`;
       return;
     }
     this.currentState = "jump left";
@@ -137,7 +164,9 @@ export class Player extends Phaser.GameObjects.Sprite {
     this.cursor.up.isDown = false;
     if (this.keys.f.isDown) {
       // priority for the shoot animation first
-      this.currentState = `shot ${this.currentState.split(" ")[1]}`;
+      this.currentState = `shot ${this.currentState.split(" ")[1]} ${
+        this.attackIndx
+      }`;
       return;
     }
     this.currentState = `jump ${this.currentState.split(" ")[1]}`;
@@ -147,7 +176,9 @@ export class Player extends Phaser.GameObjects.Sprite {
     this.body.setVelocityX(0);
     if (this.keys.f.isDown) {
       // priority for the shoot animation first
-      this.currentState = `shot ${this.currentState.split(" ")[1]}`;
+      this.currentState = `shot ${this.currentState.split(" ")[1]} ${
+        this.attackIndx
+      }`;
       return;
     }
     this.currentState = `idle ${this.currentState.split(" ")[1]}`;
@@ -159,7 +190,9 @@ export class Player extends Phaser.GameObjects.Sprite {
     this.canDoubleJump = false;
     if (this.keys.f.isDown) {
       // priority for the shoot animation first
-      this.currentState = `shot ${this.currentState.split(" ")[1]}`;
+      this.currentState = `shot ${this.currentState.split(" ")[1]} ${
+        this.attackIndx
+      }`;
       return;
     }
     this.currentState = `dbljump ${this.currentState.split(" ")[1]}`;
@@ -169,7 +202,7 @@ export class Player extends Phaser.GameObjects.Sprite {
     this.body.setVelocityX(this.speedX);
     if (this.keys.f.isDown) {
       // priority for the shoot animation first
-      this.currentState = `shot right`;
+      this.currentState = `shot right ${this.attackIndx}`;
       return;
     }
     this.currentState = `${
@@ -182,7 +215,7 @@ export class Player extends Phaser.GameObjects.Sprite {
     this.body.setVelocityX(-this.speedX);
     if (this.keys.f.isDown) {
       // priority for the shoot animation first
-      this.currentState = `shot left`;
+      this.currentState = `shot left ${this.attackIndx}`;
       return;
     }
     this.currentState = `${
@@ -196,7 +229,9 @@ export class Player extends Phaser.GameObjects.Sprite {
     this.body.setVelocityX(0);
     if (this.keys.f.isDown) {
       // priority for the shoot animation first
-      this.currentState = `shot ${this.currentState.split(" ")[1]}`;
+      this.currentState = `shot ${this.currentState.split(" ")[1]} ${
+        this.attackIndx
+      }`;
       return;
     }
     this.currentState = `${
@@ -207,12 +242,19 @@ export class Player extends Phaser.GameObjects.Sprite {
 
   Fire() {
     if (this.ammo <= 0) {
-      this.keys.f.isDown = false; //unable the user to press F incase of no ammo
+      this.keys.f.isDown = false;
+      this.keys.f.enabled = false; //unable the user to press F incase of no ammo
       return;
     }
 
-    this.currentState = `shot ${this.currentState.split(" ")[1]}`;
+    this.currentState = `shot ${this.currentState.split(" ")[1]} ${
+      this.attackIndx
+    }`;
     this.playAnim(this.currentState);
+  }
+
+  playFireSound() {
+    this.fireSound[this.attackIndx].play();
   }
 
   createBullet(x, y, velocityX) {
@@ -251,7 +293,7 @@ export class Player extends Phaser.GameObjects.Sprite {
       for (let bullet = 1; bullet <= this.ammo; bullet++) {
         if (this.bulletIcon[bullet]) this.bulletIcon[bullet].destroy();
         this.bulletIcon[bullet] = this.scene.add
-          .image(initX, 10, `${this.gunType} ammo`)
+          .image(initX, 20, `${this.gunType} ammo`)
           .setScale(1);
 
         initX += 25;
@@ -260,6 +302,7 @@ export class Player extends Phaser.GameObjects.Sprite {
   }
 
   reshargeAmmo() {
+    this.keys.f.enabled = true;
     this.ammo = this.reshargedAmmo;
     this.createBulletsUI();
   }
@@ -271,11 +314,15 @@ export class Player extends Phaser.GameObjects.Sprite {
       let initX = this.scene.scale.width - 15;
       for (let h = 1; h <= health; h++) {
         this.healthPointsIcon[h] = this.scene.add
-          .image(initX, 10, `health crate`)
+          .image(initX, 20, `health crate`)
           .setScale(1);
 
         initX -= 25;
       }
     }
+  }
+
+  canCreateBullet() {
+    return !(this.gunType == "sword" || this.gunType == "shotgun");
   }
 }

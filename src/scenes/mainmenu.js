@@ -17,13 +17,18 @@ export class MainMenu extends Phaser.Scene {
     characterStats.forEach((char) => {
       const key = Object.keys(char)[0];
       const character = this.add.image(initX, InitY, key).setInteractive();
-      character.setScale(2);
       character.charStats = char[key];
+      character.setScale(character.charStats.scale);
 
       character.on("pointerdown", () =>
         this.selectCharacter.call(this, character)
       );
       initX += 300;
+
+      if (initX > this.scale.width) {
+        InitY += 100;
+        initX = 0;
+      }
     });
 
     this.add
