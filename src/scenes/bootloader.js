@@ -39,20 +39,21 @@ export class BootLoader extends Phaser.Scene {
     );
 
     const name = char.name;
+    const numberOfAttacks = char.numOfAnimationAttack;
+    const frameWidth = char.frameWidth;
+    const frameHeight = char.frameHeight;
+
     this.load.image(
       `${name}`,
       `../../public/assets/Characters/${name}/${name}.png`
     );
-    this.load.audio(
-      `${name}_gun_sound`,
-      `../../public/assets/Audio/${name}_gun_sound.mp3`
-    );
+
     this.load.spritesheet(
       `${name}_idle_left`,
       `../../public/assets/Characters/${name}/idle left.png`,
       {
-        frameWidth: 128,
-        frameHeight: 128,
+        frameWidth: frameWidth,
+        frameHeight: frameHeight,
       }
     );
 
@@ -60,8 +61,8 @@ export class BootLoader extends Phaser.Scene {
       `${name}_idle_right`,
       `../../public/assets/Characters/${name}/idle right.png`,
       {
-        frameWidth: 128,
-        frameHeight: 128,
+        frameWidth: frameWidth,
+        frameHeight: frameHeight,
       }
     );
 
@@ -69,8 +70,8 @@ export class BootLoader extends Phaser.Scene {
       `${name}_run_right`,
       `../../public/assets/Characters/${name}/run right.png`,
       {
-        frameWidth: 128,
-        frameHeight: 128,
+        frameWidth: frameWidth,
+        frameHeight: frameHeight,
       }
     );
 
@@ -78,8 +79,8 @@ export class BootLoader extends Phaser.Scene {
       `${name}_run_left`,
       `../../public/assets/Characters/${name}/run left.png`,
       {
-        frameWidth: 128,
-        frameHeight: 128,
+        frameWidth: frameWidth,
+        frameHeight: frameHeight,
       }
     );
 
@@ -87,8 +88,8 @@ export class BootLoader extends Phaser.Scene {
       `${name}_jump_left`,
       `../../public/assets/Characters/${name}/jump left.png`,
       {
-        frameWidth: 128,
-        frameHeight: 128,
+        frameWidth: frameWidth,
+        frameHeight: frameHeight,
       }
     );
 
@@ -96,8 +97,8 @@ export class BootLoader extends Phaser.Scene {
       `${name}_jump_right`,
       `../../public/assets/Characters/${name}/jump right.png`,
       {
-        frameWidth: 128,
-        frameHeight: 128,
+        frameWidth: frameWidth,
+        frameHeight: frameHeight,
       }
     );
 
@@ -105,8 +106,8 @@ export class BootLoader extends Phaser.Scene {
       `${name}_dbljump_left`,
       `../../public/assets/Characters/${name}/jump left.png`,
       {
-        frameWidth: 128,
-        frameHeight: 128,
+        frameWidth: frameWidth,
+        frameHeight: frameHeight,
       }
     );
 
@@ -114,45 +115,33 @@ export class BootLoader extends Phaser.Scene {
       `${name}_dbljump_right`,
       `../../public/assets/Characters/${name}/jump right.png`,
       {
-        frameWidth: 128,
-        frameHeight: 128,
+        frameWidth: frameWidth,
+        frameHeight: frameHeight,
       }
     );
 
-    this.load.spritesheet(
-      `${name}_shot_left`,
-      `../../public/assets/Characters/${name}/shot left.png`,
-      {
-        frameWidth: 128,
-        frameHeight: 128,
-      }
-    );
+    for (let shot = 0; shot < numberOfAttacks; shot++) {
+      this.load.audio(
+        `${name}_gun_sound_${shot}`,
+        `../../public/assets/Audio/${name}_gun_sound_${shot}.mp3` //for every attack there is a special sound
+      );
+      this.load.spritesheet(
+        `${name}_shot_left_${shot}`,
+        `../../public/assets/Characters/${name}/shot left ${shot}.png`,
+        {
+          frameWidth: frameWidth,
+          frameHeight: frameHeight,
+        }
+      );
 
-    this.load.spritesheet(
-      `${name}_shot_right`,
-      `../../public/assets/Characters/${name}/shot right.png`,
-      {
-        frameWidth: 128,
-        frameHeight: 128,
-      }
-    );
-
-    this.load.spritesheet(
-      `${name}_hurt_left`,
-      `../../public/assets/Characters/${name}/hurt left.png`,
-      {
-        frameWidth: 128,
-        frameHeight: 128,
-      }
-    );
-
-    this.load.spritesheet(
-      `${name}_hurt_right`,
-      `../../public/assets/Characters/${name}/hurt right.png`,
-      {
-        frameWidth: 128,
-        frameHeight: 128,
-      }
-    );
+      this.load.spritesheet(
+        `${name}_shot_right_${shot}`,
+        `../../public/assets/Characters/${name}/shot right ${shot}.png`,
+        {
+          frameWidth: frameWidth,
+          frameHeight: frameHeight,
+        }
+      );
+    }
   }
 }
