@@ -8,7 +8,7 @@ export class MainMenu extends Phaser.Scene {
     });
   }
   preload() {
-    this.load.image("play button", "../../public/assets/UI/play button.png");
+    this.load.image("play button", "../../public/assets/misc/play button.png");
   }
   create() {
     let initX = 300,

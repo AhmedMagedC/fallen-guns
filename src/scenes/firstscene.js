@@ -42,6 +42,7 @@ export class FirstScene extends Phaser.Scene {
           );
           this.players[id].body.setSize(30, 80); // Adjust size for proper hitbox
           this.players[id].body.setOffset(45, 50); // Adjust Offset for proper hitbox
+          this.players[id].updateHealthPointsUI(players[id].charStats.health); // at first join , create health points at the top right corner (only for the main player (the one that initiate the socket connection))
           this.players[id].playAnim(currentState);
           grounds.forEach((ground) => {
             this.physics.add.collider(this.players[id], ground);
@@ -91,7 +92,7 @@ export class FirstScene extends Phaser.Scene {
 
       Object.keys(this.players).forEach((id) => {
         if (newBullet.y == -1 && newBullet.srcID != id) {
-          // dont create a bullet if it's the shotgun player (make the bullet go out of boundries), instead collide if the enemey is 70m far from the player
+          // dont create a bullet if it's the shotgun player (make the bullet go out of boundries), instead collide if the enemey is 110m(x-axis) && 50m(y-axis) far from the player
           const xDistanceFromSrcPlayer =
             this.players[id].x - this.players[newBullet.srcID].x;
           const yDistanceFromSrcPlayer =
@@ -125,7 +126,8 @@ export class FirstScene extends Phaser.Scene {
     });
 
     this.socket.on("playerGotHitSync", (id, curHealth) => {
-      if (curHealth <= 0) this.players[id].destroy();
+      this.players[id].updateHealthPointsUI(curHealth);
+      // if (curHealth <= 0) this.players[id].destroy();
     });
 
     this.socket.on("createAmmoCrate", (posX) => {
@@ -144,7 +146,6 @@ export class FirstScene extends Phaser.Scene {
           ammoCrate.destroy();
 
           if (id == this.socket.id) this.players[id].reshargeAmmo(); // resharge ammo for the main player only
-          
         });
       });
     });
