@@ -3,7 +3,7 @@ export const characterStats = [
     Gangsters_1: {
       name: "Gangsters_1",
       bulletTime: 100,
-      damage: 2,
+      damage: 4,
       ammo: 10,
       health: 10,
       gunType: "rifle",
@@ -59,7 +59,7 @@ export const characterStats = [
   {
     Knight: {
       name: "Knight",
-      bulletTime: 0,
+      bulletTime: 50,
       damage: 6,
       ammo: 6,
       health: 10,

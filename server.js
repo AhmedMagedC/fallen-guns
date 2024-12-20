@@ -79,7 +79,8 @@ setInterval(() => {
 }, 10000);
 
 // Start the server
-const PORT = 8080;
-server.listen(PORT, "26.229.37.155", () => {
-  console.log(`Server is running at https://26.229.37.155:${PORT}`);
+const PORT = 50315; // Use the forwarded port
+const HOST = "0.0.0.0";
+server.listen(PORT, HOST, () => {
+  console.log(`Server is running at https://${HOST}:${PORT}`);
 });

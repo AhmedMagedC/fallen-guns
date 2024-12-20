@@ -59,7 +59,7 @@ export class Player extends Phaser.GameObjects.Sprite {
     });
 
     this.on("animationupdate", (animation) => {
-      // to apply the cooldown between shots
+      // to sync the shooting animation with bullet && gun sound
       const elapsedTime = this.scene.time.now - this.startAnimationtime;
       if (animation.key.split(" ")[1] == "shot") {
         if (elapsedTime >= this.bulletTime && this.startAnimationtime) {
@@ -87,7 +87,6 @@ export class Player extends Phaser.GameObjects.Sprite {
     });
   }
   updateMovement() {
-    console.log(this.keys.f.isDown);
     if (this.keys.f.isDown) this.Fire();
 
     if (!this.body.touching.down) {
