@@ -30,6 +30,7 @@ export class Player extends Phaser.GameObjects.Sprite {
   init() {
     this.speedX = 500;
     this.speedY = 420;
+    this.isDead = false;
     this.animation.createAnim();
     this.scene.add.existing(this); // add player to the scene
     this.scene.physics.add.existing(this); // add physics to the player
@@ -87,6 +88,7 @@ export class Player extends Phaser.GameObjects.Sprite {
     });
   }
   updateMovement() {
+    if (this.isDead) return; //don't make any move if you're dead
     if (this.keys.f.isDown) this.Fire();
 
     if (!this.body.touching.down) {
@@ -270,7 +272,7 @@ export class Player extends Phaser.GameObjects.Sprite {
     });
   }
 
-  gotHit() {
+  emitBlood() {
     const bloodEmitter = this.scene.add.particles(
       // emit blood particles
       this.x,
@@ -307,21 +309,33 @@ export class Player extends Phaser.GameObjects.Sprite {
   }
 
   updateHealthPointsUI(health) {
-    if (this.id == this.scene.socket.id) {
-      this.healthPointsIcon.forEach((h) => h.destroy()); // clear health icons first
+    this.healthPointsIcon.forEach((h) => h.destroy()); // clear health icons first
 
-      let initX = this.scene.scale.width - 15;
-      for (let h = 1; h <= health; h++) {
-        this.healthPointsIcon[h] = this.scene.add
-          .image(initX, 20, `health crate`)
-          .setScale(1);
+    let initX = this.scene.scale.width - 15;
+    for (let h = 1; h <= health; h++) {
+      this.healthPointsIcon[h] = this.scene.add
+        .image(initX, 20, `health crate`)
+        .setScale(1);
 
-        initX -= 25;
-      }
+      initX -= 25;
     }
   }
 
   canCreateBullet() {
     return !(this.gunType == "sword" || this.gunType == "shotgun");
+  }
+
+  died() {
+    this.currentState = `dead ${this.currentState.split(" ")[1]}`;
+    this.isDead = true;
+    this.playAnim(this.currentState);
+  }
+
+  revive() {
+    this.currentState = `idle right`; //init state when revived
+    this.isDead = false;
+    this.reshargeAmmo();
+    this.setX(Math.random() * 1500); 
+    this.setY(Math.random() * -1);
   }
 }

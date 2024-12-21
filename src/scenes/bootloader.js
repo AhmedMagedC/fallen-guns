@@ -143,5 +143,23 @@ export class BootLoader extends Phaser.Scene {
         }
       );
     }
+
+    this.load.spritesheet(
+      `${name}_dead_right`,
+      `../../public/assets/Characters/${name}/dead right.png`,
+      {
+        frameWidth: frameWidth,
+        frameHeight: frameHeight,
+      }
+    );
+
+    this.load.spritesheet(
+      `${name}_dead_left`,
+      `../../public/assets/Characters/${name}/dead left.png`,
+      {
+        frameWidth: frameWidth,
+        frameHeight: frameHeight,
+      }
+    );
   }
 }

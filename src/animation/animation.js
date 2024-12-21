@@ -120,6 +120,7 @@ export class Anim {
       frameRate: 10,
       repeat: 0,
     });
+    
     for (let shot = 0; shot < this.numOfAttacks; shot++) {
       this.scene.anims.create({
         key: `${this.id} shot left ${shot}`,
@@ -153,5 +154,29 @@ export class Anim {
         repeat: 0,
       });
     }
+
+    this.scene.anims.create({
+      key: `${this.id} dead right`,
+      frames: this.scene.anims.generateFrameNumbers(`${this.name}_dead_right`, {
+        start: 0,
+        end:
+          this.scene.textures.get(`${this.name}_dead_right`).getFrameNames()
+            .length - 1,
+      }),
+      frameRate: 5,
+      repeat: 0,
+    });
+
+    this.scene.anims.create({
+      key: `${this.id} dead left`,
+      frames: this.scene.anims.generateFrameNumbers(`${this.name}_dead_left`, {
+        start:
+          this.scene.textures.get(`${this.name}_dead_left`).getFrameNames()
+            .length - 1,
+        end: 0,
+      }),
+      frameRate: 5,
+      repeat: 0,
+    });
   }
 }

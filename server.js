@@ -31,8 +31,9 @@ io.on("connection", (socket) => {
 
   // Add new player to the list
   const charStats = JSON.parse(socket.handshake.query.charStats);
+  charStats.curHealth = charStats.health;
   players[socket.id] = {
-    x: Math.random() * 800, // Random starting position
+    x: Math.random() * 1500, // Random starting position
     y: Math.random() * -1,
     state: "idle right", // initial state of the client is idle
     charStats,
@@ -56,6 +57,7 @@ io.on("connection", (socket) => {
     }
   });
 
+  // Update player state (to keep the correct animation)
   socket.on("updateState", (data) => {
     if (players[socket.id]) {
       players[socket.id].state = data.state;
@@ -68,8 +70,27 @@ io.on("connection", (socket) => {
   });
 
   socket.on("playerGotHit", (id, srcID) => {
-    players[id].charStats.health -= players[srcID].charStats.damage;
-    io.emit("playerGotHitSync", id, players[id].charStats.health);
+    players[id].charStats.curHealth -= players[srcID].charStats.damage;
+    io.emit("updateHealthPointsIcons", id, players[id].charStats.curHealth);
+    if (players[id].charStats.curHealth <= 0) {
+      io.emit("playerDied", id);
+
+      setTimeout(() => {
+        // respawn the player after 3 secs of being dead
+        players[id].charStats.curHealth = players[id].charStats.health;
+        io.emit("respawnPlayer", id, players[id].charStats.health);
+      }, 3000);
+    }
+  });
+
+  socket.on("fallenOutOfBoundries", (id) => {
+    io.emit("playerDied", id);
+
+    setTimeout(() => {
+      // respawn the player after 3 secs of being dead
+      players[id].charStats.curHealth = players[id].charStats.health;
+      io.emit("respawnPlayer", id, players[id].charStats.health);
+    }, 3000);
   });
 });
 
