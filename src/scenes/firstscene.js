@@ -47,8 +47,9 @@ export class FirstScene extends Phaser.Scene {
             players[id].charStats.hitbox.sizeX,
             players[id].charStats.hitbox.sizeY
           );
-          this.players[id].body.setOffset(45,45); // Adjust Offset for proper hitbox
-          this.players[id].updateHealthPointsUI(players[id].charStats.health); // at first join , create health points at the top right corner (only for the main player (the one that initiate the socket connection))
+          this.players[id].body.setOffset(45, 45); // Adjust Offset for proper hitbox
+          if (id == this.socket.id)
+            this.players[id].updateHealthPointsUI(players[id].charStats.health); // at first join , create health points at the top right corner (only for the main player (the one that initiate the socket connection))
           this.players[id].playAnim(currentState);
           grounds.forEach((ground) => {
             this.physics.add.collider(this.players[id], ground);
@@ -108,32 +109,45 @@ export class FirstScene extends Phaser.Scene {
             xDistanceFromSrcPlayer * newBullet.x <= 110 &&
             Math.abs(yDistanceFromSrcPlayer) <= 50
           ) {
-            this.players[id].gotHit();
+            this.players[id].emitBlood();
 
             bullet.destroy();
 
-            if (this.socket.id == newBullet.srcID)
-              // necessary to make the player who got hit to lose only a single point of health
+            if (this.socket.id == newBullet.srcID && !this.players[id].isDead)
+              // (this.socket.id == newBullet.srcID) -> necessary to make the player who got hit to lose health only once
               this.socket.emit("playerGotHit", id, newBullet.srcID); // update the player's health
           }
         } else if (newBullet.srcID != id) {
           // make bullet collides with all players ,except the one who fired it
           this.physics.add.overlap(this.players[id], bullet, () => {
-            this.players[id].gotHit();
+            this.players[id].emitBlood();
 
             bullet.destroy();
 
-            if (this.socket.id == newBullet.srcID)
-              // necessary to make the player who got hit to lose only a single point of health
+            if (this.socket.id == newBullet.srcID && !this.players[id].isDead)
+              // (this.socket.id == newBullet.srcID) -> necessary to make the player who got hit to lose health only once
               this.socket.emit("playerGotHit", id, newBullet.srcID); // update the player's health
           });
         }
       });
     });
 
-    this.socket.on("playerGotHitSync", (id, curHealth) => {
-      this.players[id].updateHealthPointsUI(curHealth);
-      if (curHealth <= 0) this.players[id].destroy();
+    this.socket.on("updateHealthPointsIcons", (id, curHealth) => {
+      if (id == this.socket.id) {
+        this.players[id].updateHealthPointsUI(curHealth);
+      }
+    });
+
+    this.socket.on("playerDied", (id) => {
+      this.players[id].died();
+    });
+
+    this.socket.on("respawnPlayer", (id, health) => {
+      this.players[id].revive();
+      if (id == this.socket.id) {
+        // recreate health icons for socket connected player only
+        this.players[id].updateHealthPointsUI(health);
+      }
     });
 
     this.socket.on("createAmmoCrate", (posX) => {
@@ -171,6 +185,13 @@ export class FirstScene extends Phaser.Scene {
         y: this.players[this.socket.id].y,
         id: this.socket.id,
       });
+      
+      if (
+        this.players[this.socket.id].y > 650 &&
+        !this.players[this.socket.id].isDead
+      )
+        // when the player fall out of boundries
+        this.socket.emit("fallenOutOfBoundries", this.socket.id);
     }
   }
   createBackGround() {
