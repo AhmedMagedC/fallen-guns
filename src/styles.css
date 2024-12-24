@@ -1,0 +1,114 @@
+*{
+    font-family: 'Press Start 2P', cursive;
+}
+body{
+    margin: 0;
+    background-color: black;
+}
+
+.main{
+    color: #FFCC33;
+    height: 100vh;
+    position: relative;
+}
+.background{
+    width: 100%;
+    height: 100%;
+    opacity: 50%;
+    position: absolute;
+}
+
+.container{
+    margin-top: 100px;
+    left: 50%;
+    transform: translatex(-50%);
+    position: absolute;
+}
+
+.main-title{
+    font-weight: normal;
+    text-align: center  ;
+    margin: 0;
+    font-size: 128px;
+}
+
+.ui{
+    margin-top: 100px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 30px;
+}
+
+
+.my-button{
+    font-size: 20px;
+    padding: 13px 0;
+    width: 250px;
+    background-color: #FFCC33;
+}
+
+.textinput{
+    outline: none;
+    padding: 13px 10px;
+    font-size: 20px;
+}
+
+
+
+.inputs{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.deaths{
+    margin-left: 10px;
+    display: flex;
+    align-items: center;
+}
+
+.inputs .deaths input{
+    height: 40px;
+    width: 40px;
+}
+
+
+.options{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.char .pic{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 120px;
+}
+.char .pic .arrow{
+    user-select: none;
+  -webkit-user-select: none;
+  -ms-user-select: none;
+    cursor: pointer;
+}
+.char .pic img{
+    width: 200px;
+    height: 180px;
+}
+
+
+.char .stats{
+    display: flex;
+    align-items: center;
+}
+.char .stats p{
+    /* display: flexbox; */
+    align-items: center;
+    margin-left: 14px;
+}
+
+.warning{
+    color: red;
+}
