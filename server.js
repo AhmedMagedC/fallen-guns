@@ -39,26 +39,31 @@ io.on("connection", (socket) => {
   socket.on("disconnect", () => {
     console.log("Player disconnected:", socket.id);
     delete players[socket.id];
-    io.emit("removePlayer", players); // Update clients
+    io.emit("removePlayer", players); // remove the player from all clients
   });
 
   // Update player position
   socket.on("updatePosition", (data) => {
-    socket.broadcast.emit("syncPosition", data); // Sync players
+    socket.broadcast.emit("syncPosition", data); // Sync players pos
   });
 
   // Update player state (to keep the correct animation)
   socket.on("updateState", (data) => {
-    socket.broadcast.emit("syncState", data); // Sync players
+    socket.broadcast.emit("syncState", data); // Sync players animation
   });
 
+  // Make all clients see the bullet
   socket.on("createBullet", (bullet) => {
     io.emit("syncBullet", bullet);
+  });
+
+  socket.on("destroyAllAmmoCrates", () => {
+    io.emit("destroyAllAmmoCrates");
   });
 });
 
 setInterval(() => {
-  // respawn an ammo crate every 5 seconds
+  // respawn an ammo crate every 10 seconds
   io.emit("createAmmoCrate", Math.random() * 1500); // random X pos
 }, 10000);
 

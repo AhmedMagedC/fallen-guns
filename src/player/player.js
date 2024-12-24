@@ -317,11 +317,11 @@ export class Player extends Phaser.GameObjects.Sprite {
     this.createBulletsUI();
   }
 
-  updateHealthPointsUI(health) {
+  updateHealthPointsUI() {
     this.healthPointsIcon.forEach((h) => h.destroy()); // clear health icons first
 
     let initX = this.scene.scale.width - 15;
-    for (let h = 1; h <= health; h++) {
+    for (let h = 1; h <= this.curHealth; h++) {
       this.healthPointsIcon[h] = this.scene.add
         .image(initX, 20, `health crate`)
         .setScale(1);

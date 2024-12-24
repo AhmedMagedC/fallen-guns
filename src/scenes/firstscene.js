@@ -10,6 +10,7 @@ export class FirstScene extends Phaser.Scene {
   preload() {}
 
   create() {
+    this.ammoCrate = null;
     this.createBackGround();
     const grounds = [];
     this.createGrounds(grounds);
@@ -55,10 +56,7 @@ export class FirstScene extends Phaser.Scene {
 
     this.socket.on("removePlayer", (players) => {
       Object.keys(this.players).forEach((id) => {
-        if (!players[id]) {
-          this.players[id].destroy();
-          delete this.players[id];
-        }
+        if (!players[id]) this.players[id].destroy();
       });
     });
 
@@ -82,9 +80,10 @@ export class FirstScene extends Phaser.Scene {
       const bullet = this.physics.add.image(newBullet.x, newBullet.y, "bullet");
       bullet.body.setVelocityX(newBullet.velocityX);
       bullet.body.setAllowGravity(false);
-      this.players[newBullet.srcID].playFireSound();
+      this.players[newBullet.srcID].playFireSound(); // play the sound of the gun that initiated the bullet
 
       Object.keys(this.players).forEach((id) => {
+        // Targets are everyone except the one who fired the bullet
         if (newBullet.srcID != id) {
           this.players[newBullet.srcID].targetedPlayer(
             this.players[id],
@@ -96,31 +95,33 @@ export class FirstScene extends Phaser.Scene {
 
     this.socket.on("createAmmoCrate", (posX) => {
       // respawns an ammo crate when the server says so
-      const ammoCrate = this.physics.add
+      this.ammoCrate = this.physics.add
         .sprite(posX, 0, "ammo crate")
         .setScale(0.15);
 
-      ammoCrate.setAngularVelocity(500);
-      ammoCrate.body.setAllowGravity(false); // disable global gravity to customize velocity 200
-      ammoCrate.setVelocityY(200); // Lower gravity for slower falling
+      this.ammoCrate.setAngularVelocity(500);
+      this.ammoCrate.body.setAllowGravity(false); // disable global gravity to customize velocity 200
+      this.ammoCrate.setVelocityY(200); // Lower gravity for slower falling
 
-      Object.keys(this.players).forEach((id) => {
-        // make crate overlap with players
-        this.physics.add.overlap(this.players[id], ammoCrate, () => {
-          ammoCrate.destroy();
+      this.physics.add.overlap(
+        this.players[this.socket.id],
+        this.ammoCrate,
+        () => {
+          this.socket.emit("destroyAllAmmoCrates"); // upon picking the ammo crate , tell the server to destroy all ammo crates in other client's scene
+          this.players[this.socket.id].reshargeAmmo(); // resharge ammo for the main player only
+        }
+      );
+    });
 
-          if (id == this.socket.id) this.players[id].reshargeAmmo(); // resharge ammo for the main player only
-        });
-      });
+    this.socket.on("destroyAllAmmoCrates", () => {
+      if (this.ammoCrate) this.ammoCrate.destroy();
     });
   }
   update() {
     if (this.players[this.socket.id]) {
       this.players[this.socket.id].updateMovement();
-      this.players[this.socket.id].updateHealthPointsUI(
-        //
-        this.players[this.socket.id].curHealth
-      );
+      this.players[this.socket.id].updateHealthPointsUI();
+
       let updatedState = this.players[this.socket.id].currentState;
 
       this.socket.emit("updateState", {
@@ -136,7 +137,8 @@ export class FirstScene extends Phaser.Scene {
         id: this.socket.id,
       });
 
-      Object.keys(this.players).forEach((id) => { // detect if any one fallen out of boundries
+      Object.keys(this.players).forEach((id) => {
+        // detect if any one fallen out of boundries
         if (this.players[id].y > 650)
           this.players[id].damagePlayer(
             // when falling -> act as if he got hit by an inf damage
