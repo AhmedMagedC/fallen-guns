@@ -10,6 +10,7 @@ export class FirstScene extends Phaser.Scene {
   preload() {}
 
   create() {
+    this.ammoCrate = null;
     this.createBackGround();
     const grounds = [];
     this.createGrounds(grounds);
@@ -27,19 +28,17 @@ export class FirstScene extends Phaser.Scene {
     this.socket.on("playerData", (players) => {
       Object.keys(players).forEach((id) => {
         if (!this.players[id]) {
-          const { x, y } = players[id];
-          const currentState = players[id].state;
           this.players[id] = new Player(
             this,
             id,
-            x,
-            y,
-            currentState,
             players[id].charStats.name,
             players[id].charStats.bulletTime,
             players[id].charStats.ammo,
             players[id].charStats.gunType,
-            players[id].charStats.numOfAnimationAttack
+            players[id].charStats.numOfAnimationAttack,
+            players[id].charStats.health,
+            players[id].charStats.damage,
+            players[id].charStats.damageRange
           );
           this.players[id].setScale(players[id].charStats.scale);
           this.players[id].body.setSize(
@@ -48,9 +47,6 @@ export class FirstScene extends Phaser.Scene {
             players[id].charStats.hitbox.sizeY
           );
           this.players[id].body.setOffset(45, 45); // Adjust Offset for proper hitbox
-          if (id == this.socket.id)
-            this.players[id].updateHealthPointsUI(players[id].charStats.health); // at first join , create health points at the top right corner (only for the main player (the one that initiate the socket connection))
-          this.players[id].playAnim(currentState);
           grounds.forEach((ground) => {
             this.physics.add.collider(this.players[id], ground);
           });
@@ -60,138 +56,96 @@ export class FirstScene extends Phaser.Scene {
 
     this.socket.on("removePlayer", (players) => {
       Object.keys(this.players).forEach((id) => {
-        if (!players[id]) {
-          this.players[id].destroy();
-          delete this.players[id];
-        }
+        if (!players[id]) this.players[id].destroy();
       });
     });
 
     this.socket.on("syncPosition", (data) => {
       // make all clients see the change of some client's movement
-      if (data.id != this.socket.id) {
-        if (data.x != this.players[data.id].x)
-          this.players[data.id].setX(data.x);
-        if (data.y != this.players[data.id].y) {
-          this.players[data.id].setY(data.y);
-          this.players[data.id].body.setVelocityY(0); // if not for this line , (for some reason) it misses up with the player's rendering when the gravity pulls down the player
-        }
-      }
+      this.players[data.id].setX(data.x);
+      this.players[data.id].setY(data.y);
+      this.players[data.id].body.setVelocityY(0); // if not for this line , (for some reason) it misses up with the player's rendering when the gravity pulls down the player
     });
+
     this.socket.on("syncState", (data) => {
       // make all clients see the change of some client's state (idle,Running,jumping....)
+      if (this.players[data.id].isDead) return; // if the player is dead , dont play any animation
 
-      if (
-        // dont repeat the animation , except for the shooting one
-        (data.id != this.socket.id &&
-          data.state != this.players[data.id].currentState) ||
-        (data.id != this.socket.id && data.state.split(" ")[0] == "shot")
-      ) {
-        this.players[data.id].playAnim(data.state);
-        this.players[data.id].currentState = data.state;
-      }
+      this.players[data.id].playAnim(data.state);
+      this.players[data.id].currentState = data.state;
     });
+
     this.socket.on("syncBullet", (newBullet) => {
+      // make all clients see the bullet just fired
       const bullet = this.physics.add.image(newBullet.x, newBullet.y, "bullet");
       bullet.body.setVelocityX(newBullet.velocityX);
       bullet.body.setAllowGravity(false);
-      this.players[newBullet.srcID].playFireSound();
+      this.players[newBullet.srcID].playFireSound(); // play the sound of the gun that initiated the bullet
 
       Object.keys(this.players).forEach((id) => {
-        if (newBullet.y == -1 && newBullet.srcID != id) {
-          // dont create a bullet if it's the shotgun player (make the bullet go out of boundries), instead collide if the enemey is 110m(x-axis) && 50m(y-axis) far from the player
-          const xDistanceFromSrcPlayer =
-            this.players[id].x - this.players[newBullet.srcID].x;
-          const yDistanceFromSrcPlayer =
-            this.players[id].y - this.players[newBullet.srcID].y;
-          if (
-            xDistanceFromSrcPlayer * newBullet.x >= 0 && //newBullet.x to determine the direction of the gun
-            xDistanceFromSrcPlayer * newBullet.x <= 110 &&
-            Math.abs(yDistanceFromSrcPlayer) <= 50
-          ) {
-            this.players[id].emitBlood();
-
-            bullet.destroy();
-
-            if (this.socket.id == newBullet.srcID && !this.players[id].isDead)
-              // (this.socket.id == newBullet.srcID) -> necessary to make the player who got hit to lose health only once
-              this.socket.emit("playerGotHit", id, newBullet.srcID); // update the player's health
-          }
-        } else if (newBullet.srcID != id) {
-          // make bullet collides with all players ,except the one who fired it
-          this.physics.add.overlap(this.players[id], bullet, () => {
-            this.players[id].emitBlood();
-
-            bullet.destroy();
-
-            if (this.socket.id == newBullet.srcID && !this.players[id].isDead)
-              // (this.socket.id == newBullet.srcID) -> necessary to make the player who got hit to lose health only once
-              this.socket.emit("playerGotHit", id, newBullet.srcID); // update the player's health
-          });
+        // Targets are everyone except the one who fired the bullet
+        if (newBullet.srcID != id) {
+          this.players[newBullet.srcID].targetedPlayer(
+            this.players[id],
+            bullet
+          );
         }
       });
-    });
-
-    this.socket.on("updateHealthPointsIcons", (id, curHealth) => {
-      if (id == this.socket.id) {
-        this.players[id].updateHealthPointsUI(curHealth);
-      }
-    });
-
-    this.socket.on("playerDied", (id) => {
-      this.players[id].died();
-    });
-
-    this.socket.on("respawnPlayer", (id, health) => {
-      this.players[id].revive();
-      if (id == this.socket.id) {
-        // recreate health icons for socket connected player only
-        this.players[id].updateHealthPointsUI(health);
-      }
     });
 
     this.socket.on("createAmmoCrate", (posX) => {
       // respawns an ammo crate when the server says so
-      const ammoCrate = this.physics.add
+      this.ammoCrate = this.physics.add
         .sprite(posX, 0, "ammo crate")
         .setScale(0.15);
 
-      ammoCrate.setAngularVelocity(500);
-      ammoCrate.body.setAllowGravity(false); // disable global gravity to customize velocity 200
-      ammoCrate.setVelocityY(200); // Lower gravity for slower falling
+      this.ammoCrate.setAngularVelocity(500);
+      this.ammoCrate.body.setAllowGravity(false); // disable global gravity to customize velocity 200
+      this.ammoCrate.setVelocityY(200); // Lower gravity for slower falling
 
-      Object.keys(this.players).forEach((id) => {
-        // make crate overlap with players
-        this.physics.add.overlap(this.players[id], ammoCrate, () => {
-          ammoCrate.destroy();
+      this.physics.add.overlap(
+        this.players[this.socket.id],
+        this.ammoCrate,
+        () => {
+          this.socket.emit("destroyAllAmmoCrates"); // upon picking the ammo crate , tell the server to destroy all ammo crates in other client's scene
+          this.players[this.socket.id].reshargeAmmo(); // resharge ammo for the main player only
+        }
+      );
+    });
 
-          if (id == this.socket.id) this.players[id].reshargeAmmo(); // resharge ammo for the main player only
-        });
-      });
+    this.socket.on("destroyAllAmmoCrates", () => {
+      if (this.ammoCrate) this.ammoCrate.destroy();
     });
   }
   update() {
     if (this.players[this.socket.id]) {
       this.players[this.socket.id].updateMovement();
+      this.players[this.socket.id].updateHealthPointsUI();
+
       let updatedState = this.players[this.socket.id].currentState;
 
       this.socket.emit("updateState", {
+        // inform the server for the updated animation state
         id: this.socket.id,
         state: updatedState,
       });
 
       this.socket.emit("updatePosition", {
+        // infron the server for the updated position
         x: this.players[this.socket.id].x,
         y: this.players[this.socket.id].y,
         id: this.socket.id,
       });
-      
-      if (
-        this.players[this.socket.id].y > 650 &&
-        !this.players[this.socket.id].isDead
-      )
-        // when the player fall out of boundries
-        this.socket.emit("fallenOutOfBoundries", this.socket.id);
+
+      Object.keys(this.players).forEach((id) => {
+        // detect if any one fallen out of boundries
+        if (this.players[id].y > 650)
+          this.players[id].damagePlayer(
+            // when falling -> act as if he got hit by an inf damage
+            this.players[id],
+            Number.MAX_VALUE
+          );
+      });
     }
   }
   createBackGround() {

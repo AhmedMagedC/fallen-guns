@@ -4,20 +4,20 @@ export class Player extends Phaser.GameObjects.Sprite {
   constructor(
     scene,
     playerID,
-    x,
-    y,
-    state,
     name,
     bulletTime,
     ammo,
     gunType,
-    numOfAttacks
+    numOfAttacks,
+    health,
+    damage,
+    damageRange
   ) {
-    super(scene, x, y);
+    super(scene);
     this.scene = scene;
     this.name = name;
     this.id = playerID;
-    this.currentState = state;
+    this.currentState = "idle right"; //init state
     this.animation = new Anim(this.id, this.scene, this.name, numOfAttacks);
     this.bulletTime = bulletTime; // the time at which the bullet goes out of the gun (to sync with the animation)
     this.ammo = ammo;
@@ -25,6 +25,10 @@ export class Player extends Phaser.GameObjects.Sprite {
     this.gunType = gunType;
     this.numOfAttacks = numOfAttacks; //number of animation attacks
     this.attackIndx = 0;
+    this.health = health;
+    this.curHealth = this.health;
+    this.damage = damage;
+    this.damageRange = damageRange;
     this.init();
   }
   init() {
@@ -272,6 +276,11 @@ export class Player extends Phaser.GameObjects.Sprite {
     });
   }
 
+  gotHurt(damage) {
+    this.emitBlood();
+    this.curHealth -= damage;
+  }
+
   emitBlood() {
     const bloodEmitter = this.scene.add.particles(
       // emit blood particles
@@ -308,11 +317,11 @@ export class Player extends Phaser.GameObjects.Sprite {
     this.createBulletsUI();
   }
 
-  updateHealthPointsUI(health) {
+  updateHealthPointsUI() {
     this.healthPointsIcon.forEach((h) => h.destroy()); // clear health icons first
 
     let initX = this.scene.scale.width - 15;
-    for (let h = 1; h <= health; h++) {
+    for (let h = 1; h <= this.curHealth; h++) {
       this.healthPointsIcon[h] = this.scene.add
         .image(initX, 20, `health crate`)
         .setScale(1);
@@ -334,8 +343,45 @@ export class Player extends Phaser.GameObjects.Sprite {
   revive() {
     this.currentState = `idle right`; //init state when revived
     this.isDead = false;
+    this.curHealth = this.health;
     this.reshargeAmmo();
-    this.setX(Math.random() * 1500); 
+    this.setX(Math.random() * 1500);
     this.setY(Math.random() * -1);
+  }
+
+  targetedPlayer(player, bullet) {
+    if (this.canCreateBullet()) {
+      // if can create the bullet -> just make the enemy collide with the bullet
+      this.scene.physics.add.overlap(player, bullet, () => {
+        this.damagePlayer(player, this.damage);
+        bullet.destroy();
+      });
+    } else {
+      // otherwise , damage the enemy if he is in range
+      const bulletDirection = bullet.x;
+      const xDistanceFromSrcPlayer = player.x - this.x;
+      const yDistanceFromSrcPlayer = player.y - this.y;
+      if (
+        xDistanceFromSrcPlayer * bulletDirection >= 0 &&
+        xDistanceFromSrcPlayer * bulletDirection <= this.damageRange &&
+        Math.abs(yDistanceFromSrcPlayer) <= 50
+      ) {
+        this.damagePlayer(player, this.damage);
+        bullet.destroy();
+      }
+    }
+  }
+
+  damagePlayer(player, damage) {
+    if (player.isDead) return; // al drb fel myt 7aram
+
+    player.gotHurt(damage);
+    if (player.curHealth <= 0) {
+      player.died();
+      setTimeout(() => {
+        // revive after 3 sec of being dead
+        player.revive();
+      }, 3000);
+    }
   }
 }

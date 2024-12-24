@@ -27,7 +27,7 @@ export class Anim {
             .length - 1,
       }),
       frameRate: 20,
-      repeat: -1,
+      repeat: 0,
     });
 
     this.scene.anims.create({
@@ -39,7 +39,7 @@ export class Anim {
         end: 0,
       }),
       frameRate: 20,
-      repeat: -1,
+      repeat: 0,
     });
 
     this.scene.anims.create({
@@ -51,7 +51,7 @@ export class Anim {
             .length - 1,
       }),
       frameRate: 5,
-      repeat: -1,
+      repeat: 0,
     });
 
     this.scene.anims.create({
@@ -63,7 +63,7 @@ export class Anim {
         end: 0,
       }),
       frameRate: 5,
-      repeat: -1,
+      repeat: 0,
     });
 
     this.scene.anims.create({
