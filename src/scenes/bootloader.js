@@ -29,7 +29,9 @@ export class BootLoader extends Phaser.Scene {
     );
   }
   create() {
-    this.scene.start("mainmenu"); // Switch to FirstScene
+    console.log("in bootloader");
+    
+    this.scene.start("firstscene"); // Switch to FirstScene
   }
 
   loadCharacterAssets(char) {

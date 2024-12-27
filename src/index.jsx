@@ -4,6 +4,8 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Main from './pages/Main';
 import Join from './pages/Join'
 import Ready from './pages/Ready';
+import Lobby from './pages/Lobby';
+import GameComponent from './pages/GameComponent';
 const App = () => {
   return (
     <BrowserRouter>
@@ -11,6 +13,8 @@ const App = () => {
           <Route path="/" element={<Main />}/>
           <Route path="/join" element={<Join />} />
           <Route path="/ready" element={<Ready />} />
+          <Route path="/lobby" element={<Lobby />} />
+          <Route path="/game" element={<GameComponent/>} />
       </Routes>
     </BrowserRouter>
   );
