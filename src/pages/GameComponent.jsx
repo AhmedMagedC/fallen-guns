@@ -1,17 +1,13 @@
-import React, { useEffect } from 'react';
+import React, { useEffect } from "react";
 import { FirstScene } from "../scenes/firstscene.js";
 import { BootLoader } from "../scenes/bootloader.js";
-import { useLocation } from 'react-router-dom';
-import io from 'socket.io-client';
+import { useLocation } from "react-router-dom";
+import { useSocket } from "./SocketContext";
 
 const GameComponent = () => {
-  const location = useLocation();
-  const { socketUrl } = location.state || {}; // Retrieve the socket connection URL from route state
-
+  const { socket } = useSocket();
   useEffect(() => {
-    if (socketUrl) {
-      // Reconnect to the socket server using the URL
-      const socket = io(socketUrl); // Reconnect using the URL from the Lobby
+    if (socket) {
       // socket.emit("hello")
       const ratio = Math.max(
         window.innerWidth / window.innerHeight,
@@ -42,8 +38,10 @@ const GameComponent = () => {
       };
 
       const game = new Phaser.Game(config);
+
+      game.scene.start("bootloader", socket);
     }
-  }, [socketUrl]);
+  }, []);
 
   return <div id="phaser-game" />;
 };

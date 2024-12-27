@@ -25,21 +25,16 @@ const server = https.createServer(options, app);
 const io = new Server(server);
 
 let players = {}; // Store player data by socket ID
-let owner = null
+let owner = null;
 // Handle socket.io connections
 io.on("connection", (socket) => {
-
   console.log("A player connected:", socket.id);
 
   // Add new player to the list
   // addPlayer(socket);
 
   // Notify all clients of the new player list
-  io.emit("playerData", players);
-  socket.on("hello", ()=>{
-    console.log("hello");
-    
-  })
+
   socket.on("joinLobby", (data) => {
     players[socket.id] = { charStats: data.charStats };
     if (!owner) {
@@ -66,6 +61,10 @@ io.on("connection", (socket) => {
     io.emit("startGame");
   });
 
+  socket.on("inTheScene", () => {
+    io.emit("playerData", players);
+  });
+
   // Update player position
   socket.on("updatePosition", (data) => {
     socket.broadcast.emit("syncPosition", data); // Sync players pos
@@ -86,14 +85,14 @@ io.on("connection", (socket) => {
   });
 });
 
-setInterval(() => {
-  // respawn an ammo crate every 10 seconds
-  io.emit("createAmmoCrate", Math.random() * 1500); // random X pos
-}, 10000);
+// setInterval(() => {
+//   // respawn an ammo crate every 10 seconds
+//   io.emit("createAmmoCrate", Math.random() * 1500); // random X pos
+// }, 10000);
 
 function addPlayer(socket) {
   // console.log(socket.handshake.query);
-  
+
   const charStats = JSON.parse(socket.handshake.query.charStats);
   players[socket.id] = {
     charStats,

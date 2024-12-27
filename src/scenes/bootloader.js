@@ -3,6 +3,12 @@ export class BootLoader extends Phaser.Scene {
   constructor() {
     super({ key: "bootloader" });
   }
+
+  init(socket) {
+    // assign the socket of the player connected to the lobby
+    this.socket = socket;
+  }
+
   preload() {
     characterStats.forEach((char) => {
       const key = Object.keys(char)[0];
@@ -29,9 +35,7 @@ export class BootLoader extends Phaser.Scene {
     );
   }
   create() {
-    console.log("in bootloader");
-    
-    this.scene.start("firstscene"); // Switch to FirstScene
+    this.scene.start("firstscene", this.socket); // Switch to FirstScene
   }
 
   loadCharacterAssets(char) {

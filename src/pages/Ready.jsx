@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import background from "../assets/backgrounds/main.png";
 import { characterStats } from "../model/characters";
-import { useLocation, useNavigate} from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import "../styles.css";
 
 export default function Ready() {
@@ -9,7 +9,9 @@ export default function Ready() {
   const [warning, setWarning] = useState(false);
   const [name, setName] = useState("");
   const [kills, setKills] = useState(5);
-  const [selectedCharacter, setSelectedCharacter] = useState(characterStats[charIndex]);
+  const [selectedCharacter, setSelectedCharacter] = useState(
+    characterStats[charIndex]
+  );
   const location = useLocation();
   const { owner } = location.state || {};
   const navigate = useNavigate();
@@ -20,7 +22,8 @@ export default function Ready() {
   };
 
   const handleLeftArrow = () => {
-    const newIndex = charIndex - 1 < 0 ? characterStats.length - 1 : charIndex - 1;
+    const newIndex =
+      charIndex - 1 < 0 ? characterStats.length - 1 : charIndex - 1;
     updateCharacter(newIndex);
   };
 
@@ -44,7 +47,7 @@ export default function Ready() {
       };
       localStorage.setItem("selectedChar", JSON.stringify(character));
       // Assuming you have a next screen you want to navigate to
-      navigate("/lobby", { state : {character} });
+      navigate("/lobby", { state: { character } });
     }
   };
 
