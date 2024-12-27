@@ -1,0 +1,207 @@
+*{
+    font-family: 'Press Start 2P', cursive;
+}
+body{
+    margin: 0;
+    background-color: black;
+}
+
+.main{
+    color: #FFCC33;
+    height: 100vh;
+    position: relative;
+}
+.background{
+    width: 100%;
+    height: 100%;
+    opacity: 50%;
+    position: absolute;
+    z-index: -1;
+}
+
+.container{
+    margin-top: 100px;
+    left: 50%;
+    transform: translatex(-50%);
+    position: absolute;
+}
+
+.main-title{
+    font-weight: normal;
+    text-align: center  ;
+    margin: 0;
+    font-size: 128px;
+}
+
+.ui{
+    margin-top: 100px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 30px;
+}
+
+
+.my-button{
+    font-size: 20px;
+    padding: 13px 0;
+    width: 250px;
+    background-color: #FFCC33;
+    cursor: pointer;
+}
+
+.small{
+    font-size: 15px;
+}
+
+.textinput{
+    outline: none;
+    padding: 13px 10px;
+    font-size: 20px;
+}
+
+
+
+.inputs{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.deaths{
+    margin-left: 10px;
+    display: flex;
+    align-items: center;
+}
+
+.inputs .deaths input{
+    height: 40px;
+    width: 40px;
+}
+
+
+.options{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.char .pic{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 120px;
+}
+.char .pic .arrow{
+    user-select: none;
+  -webkit-user-select: none;
+  -ms-user-select: none;
+    cursor: pointer;
+}
+.char .pic img{
+    width: 200px;
+    height: 180px;
+}
+
+
+.char .stats{
+    display: flex;
+    align-items: center;
+}
+.char .stats p{
+    /* display: flexbox; */
+    align-items: center;
+    margin-left: 14px;
+}
+
+.warning{
+    color: red;
+}
+
+.side{
+    background-color: rgba(217, 217, 217, 0.5);
+    padding: 50px 100px;
+    display: inline-block;
+    height: 100%;
+}
+.side h3{
+    color: black;
+    font-size: 32px;
+}
+
+
+.side ul{
+    list-style: none;
+}
+
+.side ul img{
+    width: 50px;
+    height: 50px;
+}
+
+
+.side ul li{
+    color: black;
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    font-size: 24px;
+}
+
+
+.room{
+    position: absolute;
+    top: 30px;
+    right: 30px;
+}
+
+.room h3{
+    color: #FFCC33;
+    font-size: 36px;
+}
+
+.play{
+    background-color: #FFCC33;
+    color: red;
+    padding: 20px 40px;
+    font-size: 36px;
+    position: absolute;
+    bottom: 30px;
+    right: 30px;
+    cursor: pointer;
+}
+
+
+
+.instructions{
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.4);
+}
+
+.instructions ul{
+    list-style: none;
+}
+
+.instructions ul li{
+    margin-top: 15px;
+}
+
+.instructions-box{
+    background-color: black;
+    width: fit-content;
+    padding: 50px 30px;
+    position: relative;
+    margin: 150px auto;
+    border: 5px solid white;
+}
+
+.instructions-box span{
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    cursor: pointer;
+    font-size: 24px;
+}

@@ -7,6 +7,9 @@ export class FirstScene extends Phaser.Scene {
     });
   }
 
+  init(socket) {
+    this.socket = socket;
+  }
   preload() {}
 
   create() {
@@ -17,12 +20,7 @@ export class FirstScene extends Phaser.Scene {
 
     this.players = {}; // Store all players
 
-    const charStats = JSON.stringify(this.scene.settings.data.charStats);
-    this.socket = io({
-      query: {
-        charStats,
-      },
-    }); // Connect to the server
+    this.socket.emit("inTheScene"); //inform the server the player just spawned into the scene
 
     // Listen for player data from the server
     this.socket.on("playerData", (players) => {
@@ -31,20 +29,20 @@ export class FirstScene extends Phaser.Scene {
           this.players[id] = new Player(
             this,
             id,
-            players[id].charStats.name,
-            players[id].charStats.bulletTime,
-            players[id].charStats.ammo,
-            players[id].charStats.gunType,
-            players[id].charStats.numOfAnimationAttack,
-            players[id].charStats.health,
-            players[id].charStats.damage,
-            players[id].charStats.damageRange
+            players[id].charStats.character.name,
+            players[id].charStats.character.bulletTime,
+            players[id].charStats.character.ammo,
+            players[id].charStats.character.gunType,
+            players[id].charStats.character.numOfAnimationAttack,
+            players[id].charStats.character.health,
+            players[id].charStats.character.damage,
+            players[id].charStats.character.damageRange
           );
-          this.players[id].setScale(players[id].charStats.scale);
+          this.players[id].setScale(players[id].charStats.character.scale);
           this.players[id].body.setSize(
             // Adjust size for proper hitbox
-            players[id].charStats.hitbox.sizeX,
-            players[id].charStats.hitbox.sizeY
+            players[id].charStats.character.hitbox.sizeX,
+            players[id].charStats.character.hitbox.sizeY
           );
           this.players[id].body.setOffset(45, 45); // Adjust Offset for proper hitbox
           grounds.forEach((ground) => {
@@ -115,6 +113,56 @@ export class FirstScene extends Phaser.Scene {
 
     this.socket.on("destroyAllAmmoCrates", () => {
       if (this.ammoCrate) this.ammoCrate.destroy();
+    });
+    this.scoreboard = this.add.container(200, 100); // Position it on the screen
+    this.scoreboard.setAlpha(0); // Initially hidden
+
+    // Add a background for the scoreboard
+    const bg = this.add.rectangle(0, 0, 300, 200, 0x000000, 0.5).setOrigin(0);
+    this.scoreboard.add(bg);
+
+    // Add player names and scores
+    const players = [
+      { name: "Player1", score: 100 },
+      { name: "Player2", score: 200 },
+    ];
+
+    players.forEach((player, index) => {
+      const text = this.add.text(
+        10,
+        10 + index * 30,
+        `${player.name}: ${player.score}`,
+        {
+          fontSize: "16px",
+          fill: "#ffffff",
+        }
+      );
+      this.scoreboard.add(text);
+    });
+
+    // Set up keyboard input
+    const tabKey = this.input.keyboard.addKey(
+      Phaser.Input.Keyboard.KeyCodes.TAB
+    );
+
+    // Fade in when Tab is pressed
+    tabKey.on("down", () => {
+      this.tweens.add({
+        targets: this.scoreboard,
+        alpha: 1,
+        duration: 300, // Duration of fade in (in ms)
+        ease: "Power1",
+      });
+    });
+
+    // Fade out when Tab is released
+    tabKey.on("up", () => {
+      this.tweens.add({
+        targets: this.scoreboard,
+        alpha: 0,
+        duration: 300, // Duration of fade out (in ms)
+        ease: "Power1",
+      });
     });
   }
   update() {
