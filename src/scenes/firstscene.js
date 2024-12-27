@@ -29,20 +29,20 @@ export class FirstScene extends Phaser.Scene {
           this.players[id] = new Player(
             this,
             id,
-            players[id].charStats.name,
-            players[id].charStats.bulletTime,
-            players[id].charStats.ammo,
-            players[id].charStats.gunType,
-            players[id].charStats.numOfAnimationAttack,
-            players[id].charStats.health,
-            players[id].charStats.damage,
-            players[id].charStats.damageRange
+            players[id].charStats.character.name,
+            players[id].charStats.character.bulletTime,
+            players[id].charStats.character.ammo,
+            players[id].charStats.character.gunType,
+            players[id].charStats.character.numOfAnimationAttack,
+            players[id].charStats.character.health,
+            players[id].charStats.character.damage,
+            players[id].charStats.character.damageRange
           );
-          this.players[id].setScale(players[id].charStats.scale);
+          this.players[id].setScale(players[id].charStats.character.scale);
           this.players[id].body.setSize(
             // Adjust size for proper hitbox
-            players[id].charStats.hitbox.sizeX,
-            players[id].charStats.hitbox.sizeY
+            players[id].charStats.character.hitbox.sizeX,
+            players[id].charStats.character.hitbox.sizeY
           );
           this.players[id].body.setOffset(45, 45); // Adjust Offset for proper hitbox
           grounds.forEach((ground) => {

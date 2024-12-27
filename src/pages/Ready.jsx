@@ -41,13 +41,13 @@ export default function Ready() {
       const character = selectedCharacter[characterKey];
       // Save the selected character and name and navigate to the next scene
       const characterData = {
-        // name,
-        // kills,
+        name,
+        kills,
         character: character,
       };
-      localStorage.setItem("selectedChar", JSON.stringify(character));
+      localStorage.setItem("selectedChar", JSON.stringify(characterData));
       // Assuming you have a next screen you want to navigate to
-      navigate("/lobby", { state: { character } });
+      navigate("/lobby", { state: { characterData } });
     }
   };
 
