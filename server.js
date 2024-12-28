@@ -63,6 +63,7 @@ io.on("connection", (socket) => {
 
   socket.on("inTheScene", () => {
     io.emit("playerData", players);
+    spawnAmmoCrate();
   });
 
   // Update player position
@@ -83,12 +84,21 @@ io.on("connection", (socket) => {
   socket.on("destroyAllAmmoCrates", () => {
     io.emit("destroyAllAmmoCrates");
   });
+
+  socket.on("playerDied", (id) => {
+    io.emit("playerDied", id); // let the server infrom everyone of the player's death
+    setTimeout(() => {
+      io.emit("revivePlayer", id); // revive him after 3 sec of being dead
+    }, 3000);
+  });
 });
 
-// setInterval(() => {
-//   // respawn an ammo crate every 10 seconds
-//   io.emit("createAmmoCrate", Math.random() * 1500); // random X pos
-// }, 10000);
+function spawnAmmoCrate() {
+  setInterval(() => {
+    // respawn an ammo crate every 10 seconds
+    io.emit("createAmmoCrate", Math.random() * 1500); // random X pos
+  }, 10000);
+}
 
 function addPlayer(socket) {
   // console.log(socket.handshake.query);

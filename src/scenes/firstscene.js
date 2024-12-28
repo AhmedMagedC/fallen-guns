@@ -114,6 +114,15 @@ export class FirstScene extends Phaser.Scene {
     this.socket.on("destroyAllAmmoCrates", () => {
       if (this.ammoCrate) this.ammoCrate.destroy();
     });
+
+    this.socket.on("playerDied", (id) => {
+      this.players[id].died();
+    });
+
+    this.socket.on("revivePlayer", (id) => {
+      this.players[id].revive();
+    });
+
     this.scoreboard = this.add.container(200, 100); // Position it on the screen
     this.scoreboard.setAlpha(0); // Initially hidden
 
@@ -171,9 +180,15 @@ export class FirstScene extends Phaser.Scene {
       this.players[this.socket.id].updateHealthPointsUI();
 
       let updatedState = this.players[this.socket.id].currentState;
+      let curHealth = this.players[this.socket.id].curHealth;
+
+      if (curHealth <= 0 && !this.players[this.socket.id].isDead) {
+        // inform the server that the player died
+        this.socket.emit("playerDied", this.socket.id);
+      }
 
       this.socket.emit("updateState", {
-        // inform the server for the updated animation state
+        // inform the server for the updated animation state && health
         id: this.socket.id,
         state: updatedState,
       });

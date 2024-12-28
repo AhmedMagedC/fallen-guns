@@ -375,13 +375,6 @@ export class Player extends Phaser.GameObjects.Sprite {
   damagePlayer(player, damage) {
     if (player.isDead) return; // al drb fel myt 7aram
 
-    player.gotHurt(damage);
-    if (player.curHealth <= 0) {
-      player.died();
-      setTimeout(() => {
-        // revive after 3 sec of being dead
-        player.revive();
-      }, 3000);
-    }
+    player.gotHurt(damage); 
   }
 }
