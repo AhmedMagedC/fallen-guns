@@ -24,25 +24,30 @@ export class FirstScene extends Phaser.Scene {
 
     // Listen for player data from the server
     this.socket.on("playerData", (players) => {
-      Object.keys(players).forEach((id) => {
+      players.forEach((player) => {
+        const id = player.id;
+        const charStats = player.charStats;
+        const playerName = player.playerName;
+
         if (!this.players[id]) {
           this.players[id] = new Player(
             this,
             id,
-            players[id].charStats.character.name,
-            players[id].charStats.character.bulletTime,
-            players[id].charStats.character.ammo,
-            players[id].charStats.character.gunType,
-            players[id].charStats.character.numOfAnimationAttack,
-            players[id].charStats.character.health,
-            players[id].charStats.character.damage,
-            players[id].charStats.character.damageRange
+            playerName,
+            charStats.name,
+            charStats.bulletTime,
+            charStats.ammo,
+            charStats.gunType,
+            charStats.numOfAnimationAttack,
+            charStats.health,
+            charStats.damage,
+            charStats.damageRange
           );
-          this.players[id].setScale(players[id].charStats.character.scale);
+          this.players[id].setScale(charStats.scale);
           this.players[id].body.setSize(
             // Adjust size for proper hitbox
-            players[id].charStats.character.hitbox.sizeX,
-            players[id].charStats.character.hitbox.sizeY
+            charStats.hitbox.sizeX,
+            charStats.hitbox.sizeY
           );
           this.players[id].body.setOffset(45, 45); // Adjust Offset for proper hitbox
           grounds.forEach((ground) => {
@@ -52,14 +57,14 @@ export class FirstScene extends Phaser.Scene {
       });
     });
 
-    this.socket.on("removePlayer", (players) => {
-      Object.keys(this.players).forEach((id) => {
-        if (!players[id]) this.players[id].destroy();
-      });
+    this.socket.on("removePlayer", (id) => {
+      if (this.players[id]) this.players[id].destroy();
     });
 
     this.socket.on("syncPosition", (data) => {
       // make all clients see the change of some client's movement
+      if (data.id == this.socket.id) return;
+
       this.players[data.id].setX(data.x);
       this.players[data.id].setY(data.y);
       this.players[data.id].body.setVelocityY(0); // if not for this line , (for some reason) it misses up with the player's rendering when the gravity pulls down the player
@@ -67,6 +72,7 @@ export class FirstScene extends Phaser.Scene {
 
     this.socket.on("syncState", (data) => {
       // make all clients see the change of some client's state (idle,Running,jumping....)
+      if (data.id == this.socket.id) return;
       if (this.players[data.id].isDead) return; // if the player is dead , dont play any animation
 
       this.players[data.id].playAnim(data.state);

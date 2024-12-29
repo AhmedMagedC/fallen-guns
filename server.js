@@ -24,8 +24,7 @@ const server = https.createServer(options, app);
 // Attach socket.io to the HTTPS server
 const io = new Server(server);
 
-let players = {}; // Store player data by socket ID
-let owner = null;
+let rooms = {}; // for each room there are {players:[],maxKills}
 // Handle socket.io connections
 io.on("connection", (socket) => {
   console.log("A player connected:", socket.id);
@@ -36,59 +35,89 @@ io.on("connection", (socket) => {
   // Notify all clients of the new player list
 
   socket.on("joinLobby", (data) => {
-    players[socket.id] = { charStats: data.charStats };
-    if (!owner) {
-      owner = socket.id;
-      socket.emit("setOwner");
+    const player = {
+      id: socket.id,
+      playerName: data.name,
+      charStats: data.charStats,
+    };
+    if (!data.roomId) {
+      // if initally the player joined without roomId it means he is the owner and the roomId still not generated yet
+      if (!rooms[socket.id]) {
+        rooms[socket.id] = { maxKills: 0, players: [] }; // Initialize the room with default values
+      }
+      rooms[socket.id].maxKills = data.kills; // setting the score for each room
+      rooms[socket.id].players.push(player); // push that player into the room
+    } else {
+      socket.join(data.roomId);
+      rooms[data.roomId].players.push(player);
     }
-    io.emit("lobbyUpdate", players);
+    const targetRoom = Array.from(socket.rooms).at(-1);
+    io.to(targetRoom).emit("lobbyUpdate", rooms[targetRoom].players);
   });
 
   // Handle player disconnection
   socket.on("disconnect", () => {
     console.log("Player disconnected:", socket.id);
-    delete players[socket.id];
-    if (owner === socket.id) {
-      owner = Object.keys(players)[0] || null; // Assign new owner
-      if (owner) {
-        io.to(owner).emit("setOwner");
-      }
-    }
-    io.emit("lobbyUpdate", players);
+    // remove the player from the room
+    let targetRoom = undefined;
+
+    Object.keys(rooms).forEach((roomName) => {
+      const room = rooms[roomName];
+      // Check if the player exists in the room's players
+      const player = room.players.find((player) => player.id == socket.id);
+      if (player) targetRoom = roomName; // Assign the matching room to `targetRoom`
+    });
+
+    if (!targetRoom) return;
+
+    const updatedPlayers = rooms[targetRoom].players.filter(
+      (player) => player.id != socket.id
+    );
+    rooms[targetRoom].players = updatedPlayers;
+
+    io.to(targetRoom).emit("lobbyUpdate", updatedPlayers); // if the players are still on the lobby then update the lobby
+    io.to(targetRoom).emit("removePlayer", socket.id); // if the players are in game then remove him from the scene
   });
 
   socket.on("startGame", () => {
-    io.emit("startGame");
+    const targetRoom = Array.from(socket.rooms).at(-1);
+    io.to(targetRoom).emit("startGame");
   });
 
   socket.on("inTheScene", () => {
-    io.emit("playerData", players);
-    spawnAmmoCrate();
+    const targetRoom = Array.from(socket.rooms).at(-1);
+    io.to(targetRoom).emit("playerData", rooms[targetRoom].players);
+    // spawnAmmoCrate();
   });
 
   // Update player position
   socket.on("updatePosition", (data) => {
-    socket.broadcast.emit("syncPosition", data); // Sync players pos
+    const targetRoom = Array.from(socket.rooms).at(-1);
+    io.to(targetRoom).emit("syncPosition", data); // Sync players pos
   });
 
   // Update player state (to keep the correct animation)
   socket.on("updateState", (data) => {
-    socket.broadcast.emit("syncState", data); // Sync players animation
+    const targetRoom = Array.from(socket.rooms).at(-1);
+    io.to(targetRoom).emit("syncState", data); // Sync players animation
   });
 
   // Make all clients see the bullet
   socket.on("createBullet", (bullet) => {
-    io.emit("syncBullet", bullet);
+    const targetRoom = Array.from(socket.rooms).at(-1);
+    io.to(targetRoom).emit("syncBullet", bullet);
   });
 
   socket.on("destroyAllAmmoCrates", () => {
-    io.emit("destroyAllAmmoCrates");
+    const targetRoom = Array.from(socket.rooms).at(-1);
+    io.to(targetRoom).emit("destroyAllAmmoCrates");
   });
 
   socket.on("playerDied", (id) => {
-    io.emit("playerDied", id); // let the server infrom everyone of the player's death
+    const targetRoom = Array.from(socket.rooms).at(-1);
+    io.to(targetRoom).emit("playerDied", id); // let the server infrom everyone of the player's death
     setTimeout(() => {
-      io.emit("revivePlayer", id); // revive him after 3 sec of being dead
+      io.to(targetRoom).emit("revivePlayer", id); // revive him after 3 sec of being dead
     }, 3000);
   });
 });

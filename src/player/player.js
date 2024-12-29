@@ -4,6 +4,7 @@ export class Player extends Phaser.GameObjects.Sprite {
   constructor(
     scene,
     playerID,
+    playerName,
     name,
     bulletTime,
     ammo,
@@ -15,10 +16,11 @@ export class Player extends Phaser.GameObjects.Sprite {
   ) {
     super(scene);
     this.scene = scene;
-    this.name = name;
+    this.charName = name; // the name of character the player choose
+    this.playerName = playerName; // the name of the player
     this.id = playerID;
     this.currentState = "idle right"; //init state
-    this.animation = new Anim(this.id, this.scene, this.name, numOfAttacks);
+    this.animation = new Anim(this.id, this.scene, this.charName, numOfAttacks);
     this.bulletTime = bulletTime; // the time at which the bullet goes out of the gun (to sync with the animation)
     this.ammo = ammo;
     this.reshargedAmmo = ammo;
@@ -42,7 +44,7 @@ export class Player extends Phaser.GameObjects.Sprite {
     this.fireSound = []; // sound of the gun
     for (let sound = 0; sound < this.numOfAttacks; sound++) {
       this.fireSound[sound] = this.scene.sound.add(
-        `${this.name}_gun_sound_${sound}`
+        `${this.charName}_gun_sound_${sound}`
       );
     }
     this.body.setCollideWorldBounds(true);
@@ -375,6 +377,6 @@ export class Player extends Phaser.GameObjects.Sprite {
   damagePlayer(player, damage) {
     if (player.isDead) return; // al drb fel myt 7aram
 
-    player.gotHurt(damage); 
+    player.gotHurt(damage);
   }
 }
