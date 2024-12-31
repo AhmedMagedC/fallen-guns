@@ -10,6 +10,7 @@ export default function Ready() {
   const [name, setName] = useState("");
   const [roomId, setRoomId] = useState(""); // State for Room ID
   const [kills, setKills] = useState(5);
+  const [warningText, setWarningText] = useState("");
   const [selectedCharacter, setSelectedCharacter] = useState(
     characterStats[charIndex]
   );
@@ -34,8 +35,12 @@ export default function Ready() {
   };
 
   const handleJoin = () => {
-    if (!name || (!owner && !roomId)) {
+    if (!name) {
       setWarning(true);
+      setWarningText("Please Enter Your Name");
+    } else if (!owner && !roomId) {
+      setWarning(true);
+      setWarningText("Please Enter Room ID");
     } else {
       setWarning(false);
       const characterKey = Object.keys(selectedCharacter)[0];
@@ -107,9 +112,7 @@ export default function Ready() {
           <button className="my-button" onClick={handleJoin}>
             Join
           </button>
-          {warning && (
-            <p className="warning">Please enter {name ? "Room ID" : "Name"}</p>
-          )}
+          {warning && <p className="warning">{warningText}</p>}
         </div>
       </div>
     </div>

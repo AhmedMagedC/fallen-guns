@@ -1,12 +1,14 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { FirstScene } from "../scenes/firstscene.js";
 import { BootLoader } from "../scenes/bootloader.js";
 import { useSocket } from "./SocketContext";
 import { useNavigate } from "react-router-dom";
+import "./style.css"; // Import the same CSS file for consistent styling
 
 const GameComponent = () => {
   const { socket } = useSocket();
   const navigate = useNavigate();
+  const [showExitModal, setShowExitModal] = useState(false); // State to control modal visibility
 
   useEffect(() => {
     if (socket) {
@@ -14,7 +16,7 @@ const GameComponent = () => {
         window.innerWidth / window.innerHeight,
         window.innerHeight / window.innerWidth
       );
-      const DEFAULT_HEIGHT = 720; // any height you want
+      const DEFAULT_HEIGHT = 720;
       const DEFAULT_WIDTH = ratio * DEFAULT_HEIGHT;
 
       const config = {
@@ -46,18 +48,8 @@ const GameComponent = () => {
 
       // Handle the back button
       const handlePopState = () => {
-        const confirmExit = window.confirm(
-          "Are you sure you want to leave the game and return to main menu?"
-        );
-        if (!confirmExit) {
-          // Prevent navigation
-          window.history.pushState(null, "", window.location.href);
-        } else {
-          // Allow navigation and clean up
-          game.destroy(true); // Destroy the Phaser game instance if exiting
-          socket.disconnect();
-          navigate("/");
-        }
+        // Show the modal instead of a default confirmation
+        setShowExitModal(true);
       };
 
       // Add event listener
@@ -71,7 +63,40 @@ const GameComponent = () => {
     }
   }, []);
 
-  return <div id="phaser-game" />;
+  // Function to confirm exit
+  const confirmExit = () => {
+    if (socket) socket.disconnect();
+    navigate("/"); // Redirect to the main menu
+  };
+
+  // Function to cancel exit
+  const cancelExit = () => {
+    // Push the same state to reset history interaction
+    window.history.pushState(null, "", window.location.href);
+    setShowExitModal(false);
+  };
+
+  return (
+    <div>
+      <div id="phaser-game" />
+      {showExitModal && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <h3>Leave Game?</h3>
+            <p>Are you sure you want to leave the game and return to the main menu?</p>
+            <div className="modal-buttons">
+              <button onClick={confirmExit} className="btn-confirm">
+                Yes
+              </button>
+              <button onClick={cancelExit} className="btn-cancel">
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 };
 
 export default GameComponent;

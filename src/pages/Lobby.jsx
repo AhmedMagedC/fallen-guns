@@ -3,73 +3,78 @@ import io from "socket.io-client";
 import { useSocket } from "./SocketContext";
 import { useNavigate, useLocation } from "react-router-dom";
 import background from "../assets/backgrounds/lobby.png";
+import "./style.css";
 
 function Lobby() {
   const { socket, setSocket } = useSocket();
-  const socketRef = useRef(null); // Use ref for the socket
+  const socketRef = useRef(null);
   const location = useLocation();
-  let { character, roomId, kills, name } = location.state || {};
+  const { character, roomId, kills, name } = location.state || {};
   const [players, setPlayers] = useState({});
-  const [displayRoomId, setRoomId] = useState("");
+  const [showExitModal, setShowExitModal] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Create the socket connection only once when the component mounts
-    const socket = io(); // Connect to the server
+    const socket = io();
     socketRef.current = socket;
 
     setSocket(socket);
 
-    // On initial connection
+    socket.emit("joinLobby", { charStats: character, roomId, kills, name });
 
-    socket.emit("joinLobby", {
-      charStats: character,
-      roomId,
-      kills,
-      name,
-    });
-
-    // Listen for player updates
     socket.on("lobbyUpdate", (players) => {
       setPlayers(players);
     });
 
-    // Start the game
     socket.on("startGame", () => {
-      navigate("/game"); // Redirect to the Phaser game page
+      navigate("/game");
     });
 
     window.history.pushState(null, "", window.location.href);
 
-    // Handle the back button
     const handlePopState = () => {
-      const confirmExit = window.confirm(
-        "Are you sure you want to leave the lobby and return to main menu?"
-      );
-      if (!confirmExit) {
-        // Prevent navigation
-        window.history.pushState(null, "", window.location.href);
-      } else {
-        // Allow navigation and clean up
-        socket.disconnect();
-        navigate("/");
-      }
+      setShowExitModal(true);
     };
 
-    // Add event listener
     window.addEventListener("popstate", handlePopState);
 
-    // Cleanup on unmount
     return () => {
       window.removeEventListener("popstate", handlePopState);
     };
   }, []);
 
-  const startGame = () => {
-    if (socketRef.current) {
-      socketRef.current.emit("startGame");
-    }
+  const confirmExit = () => {
+    socketRef.current?.disconnect();
+    navigate("/");
   };
+
+  const cancelExit = () => {
+    window.history.pushState(null, "", window.location.href);
+    setShowExitModal(false);
+  };
+
+  const startGame = () => {
+    socketRef.current?.emit("startGame");
+  };
+
+  const ExitModal = ({ onConfirm, onCancel }) => (
+    <div className="modal-overlay">
+      <div className="modal-content">
+        <h3>Leave Lobby?</h3>
+        <p>
+          Are you sure you want to leave the lobby and return to the main menu?
+        </p>
+        <div className="modal-buttons">
+          <button onClick={onConfirm} className="btn-confirm">
+            Yes
+          </button>
+          <button onClick={onCancel} className="btn-cancel">
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+  );
 
   return (
     <div className="main">
@@ -77,17 +82,15 @@ function Lobby() {
       <div className="side">
         <h3>players</h3>
         <ul>
-          {Object.keys(players).map((id) => {
-            return (
-              <li key={id}>
-                <img
-                  src={`../../public/assets/Characters/${players[id].charStats.name}/${players[id].charStats.name}.png`}
-                  alt="haha"
-                />
-                <span>{players[id].playerName}</span>
-              </li>
-            );
-          })}
+          {Object.keys(players).map((id) => (
+            <li key={id}>
+              <img
+                src={`../../public/assets/Characters/${players[id].charStats.name}/${players[id].charStats.name}.png`}
+                alt="player character"
+              />
+              <span>{players[id].playerName}</span>
+            </li>
+          ))}
         </ul>
       </div>
       <div className="room">
@@ -98,6 +101,9 @@ function Lobby() {
         <button className="play" onClick={startGame}>
           PLAY!!
         </button>
+      )}
+      {showExitModal && (
+        <ExitModal onConfirm={confirmExit} onCancel={cancelExit} />
       )}
     </div>
   );
