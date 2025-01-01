@@ -34,8 +34,8 @@ export class Player extends Phaser.GameObjects.Sprite {
     this.init();
   }
   init() {
-    this.speedX = 500;
-    this.speedY = 420;
+    this.speedX = 550;
+    this.speedY = 500;
     this.isDead = false;
     this.score = 0;
     this.animation.createAnim();
@@ -79,7 +79,7 @@ export class Player extends Phaser.GameObjects.Sprite {
             : facingLeft;
           const bulletY = this.canCreateBullet()
             ? this.y + (this.gunType == "pistol" ? 10 : 25) // some special handling for the pistol player (to make the bullet as if it comes from the gun)
-            : -1;
+            : -3;
           const bulletVelocity = 2000 * facingLeft;
 
           this.createBullet(bulletX, bulletY, bulletVelocity);
@@ -90,8 +90,12 @@ export class Player extends Phaser.GameObjects.Sprite {
       if (
         animation.key.split(" ")[1] == "shot" &&
         this.scene.socket.id == this.id
-      )
+      ) {
         this.attackIndx = (this.attackIndx + 1) % this.numOfAttacks; // apply the next attack && sound
+        if (this.ammo <= 0) {
+          this.keys.f.isDown = false;
+        }
+      }
     });
   }
   updateMovement() {
@@ -250,7 +254,7 @@ export class Player extends Phaser.GameObjects.Sprite {
 
   Fire() {
     if (this.ammo <= 0) {
-      this.keys.f.isDown = false;
+      // this.keys.f.isDown = false;
       this.keys.f.enabled = false; //unable the user to press F incase of no ammo
       return;
     }
@@ -388,7 +392,7 @@ export class Player extends Phaser.GameObjects.Sprite {
       player.id == this.scene.socket.id
     ) {
       // if the client is dead inform the server to inform the rest of clients
-      this.scene.socket.emit("playerGotKilled", player.id, killerId); 
+      this.scene.socket.emit("playerGotKilled", player.id, killerId);
     }
   }
 }

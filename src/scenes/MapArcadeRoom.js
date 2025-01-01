@@ -1,9 +1,9 @@
 import { Player } from "../player/player.js";
 
-export class FirstScene extends Phaser.Scene {
+export class MapArcadeRoom extends Phaser.Scene {
   constructor() {
     super({
-      key: "firstscene",
+      key: "MapArcadeRoom",
     });
   }
 
@@ -52,7 +52,7 @@ export class FirstScene extends Phaser.Scene {
             charStats.hitbox.sizeX,
             charStats.hitbox.sizeY
           );
-          this.players[id].body.setOffset(45, 45); // Adjust Offset for proper hitbox
+          this.players[id].body.setOffset(55, 45); // Adjust Offset for proper hitbox
           grounds.forEach((ground) => {
             this.physics.add.collider(this.players[id], ground);
           });
@@ -62,6 +62,7 @@ export class FirstScene extends Phaser.Scene {
 
     this.socket.on("removePlayer", (id) => {
       if (this.players[id]) {
+        if (this.players[id].textName) this.players[id].textName.destroy();
         this.players[id].destroy();
         delete this.players[id];
       }
@@ -88,6 +89,7 @@ export class FirstScene extends Phaser.Scene {
     this.socket.on("syncBullet", (newBullet) => {
       // make all clients see the bullet just fired
       const bullet = this.physics.add.image(newBullet.x, newBullet.y, "bullet");
+      bullet.setScale(1.6);
       bullet.body.setVelocityX(newBullet.velocityX);
       bullet.body.setAllowGravity(false);
       this.players[newBullet.srcID].playFireSound(); // play the sound of the gun that initiated the bullet
@@ -149,6 +151,7 @@ export class FirstScene extends Phaser.Scene {
       this.updateScoreBoard(this.maxKills);
       this.players[this.socket.id].updateMovement();
       this.players[this.socket.id].updateHealthPointsUI();
+      this.displayNames();
 
       let updatedState = this.players[this.socket.id].currentState;
 
@@ -167,7 +170,7 @@ export class FirstScene extends Phaser.Scene {
 
       Object.keys(this.players).forEach((id) => {
         // detect if any one fallen out of boundries
-        if (this.players[id].y > 650)
+        if (this.players[id].y > this.scale.height - 100)
           this.players[id].damagePlayer(
             // when falling -> act as if he got hit by an inf damage
             this.players[id],
@@ -189,30 +192,59 @@ export class FirstScene extends Phaser.Scene {
       }
     }
   }
+  displayNames() {
+    Object.keys(this.players).forEach((id) => {
+      if (this.players[id].textName) this.players[id].textName.destroy();
+      this.players[id].textName = this.add.text(
+        this.players[id].x,
+        this.players[id].y - 50,
+        this.players[id].playerName,
+        {
+          font: "16px Arial",
+          fill: "#ffffff", // White text color
+          backgroundColor: "#000000", // Black background
+          padding: { x: 5, y: 2 }, // Padding for better visibility
+        }
+      );
+      this.players[id].textName.setOrigin(0.5); // Center the text horizontally
+    });
+  }
   createBackGround() {
-    const background = this.add.image(0, 0, "sky forest");
+    // Create the background image
+    const background = this.add.image(0, 0, "arcade room");
 
-    background.setOrigin(0, 0.4);
+    background.setOrigin(0, 0);
     let scaleX = this.scale.width / background.width; // Scale based on screen width
     let scaleY = this.scale.height / background.height; // Scale based on screen height
-    let scale = Math.max(scaleX, scaleY * 1.9); // Use the larger scale to cover the entire screen
+    let scale = Math.max(scaleX, scaleY); // Use the larger scale to cover the entire screen
 
     background.setScale(scale);
   }
+
   createGrounds(grounds) {
     grounds[0] = this.physics.add
-      .staticImage(0, 250, "green ground")
-      .setScale(0.06)
+      .staticImage(0, 250, "black ground")
+      .setScale(0.09)
       .refreshBody();
 
     grounds[1] = this.physics.add
-      .staticImage(this.scale.width, 250, "green ground")
-      .setScale(0.07)
+      .staticImage(this.scale.width, 250, "black ground")
+      .setScale(0.09)
       .refreshBody();
 
     grounds[2] = this.physics.add
-      .staticImage(this.scale.width / 2, 450, "green ground")
-      .setScale(0.17, 0.07)
+      .staticImage(this.scale.width / 2, 500, "black ground")
+      .setScale(0.19, 0.09)
+      .refreshBody();
+
+    grounds[3] = this.physics.add
+      .staticImage(0, 750, "black ground")
+      .setScale(0.09)
+      .refreshBody();
+
+    grounds[5] = this.physics.add
+      .staticImage(this.scale.width, 750, "black ground")
+      .setScale(0.09)
       .refreshBody();
   }
 

@@ -16,7 +16,7 @@ export const characterStats = [
         sizeX: 30,
         sizeY: 80,
       },
-      scale: 1, // how much does it need to be scaled when added to the scene
+      scale: 1.2, // how much does it need to be scaled when added to the scene
     },
   },
   {
@@ -36,7 +36,7 @@ export const characterStats = [
         sizeX: 30,
         sizeY: 80,
       },
-      scale: 1, // how much does it need to be scaled when added to the scene
+      scale: 1.2, // how much does it need to be scaled when added to the scene
     },
   },
   {
@@ -56,7 +56,7 @@ export const characterStats = [
         sizeX: 30,
         sizeY: 80,
       },
-      scale: 1, // how much does it need to be scaled when added to the scene
+      scale: 1.2, // how much does it need to be scaled when added to the scene
     },
   },
   {
@@ -76,7 +76,47 @@ export const characterStats = [
         sizeX: 25,
         sizeY: 35,
       },
-      scale: 1.7, // how much does it need to be scaled when added to the scene
+      scale: 1.9, // how much does it need to be scaled when added to the scene
+    },
+  },
+  {
+    Sniper: {
+      name: "Sniper",
+      bulletTime: 100,
+      damage: 10,
+      damageRange: Infinity,
+      ammo: 2,
+      health: 10,
+      gunType: "sniper",
+      numOfAnimationAttack: 2, // number of shooting animation
+      frameWidth: 128 /* used in bootloader to correctly load sprite animation*/,
+      frameHeight: 128,
+      hitbox: {
+        // adjust the hitbox for each sprite
+        sizeX: 30,
+        sizeY: 80,
+      },
+      scale: 1.2, // how much does it need to be scaled when added to the scene
+    },
+  },
+  {
+    Fantasy_Warrior: {
+      name: "Fantasy_Warrior",
+      bulletTime: 100,
+      damage: 6,
+      damageRange: 150,
+      ammo: 3,
+      health: 10,
+      gunType: "sword",
+      numOfAnimationAttack: 3, // number of shooting animation
+      frameWidth: 162 /* used in bootloader to correctly load sprite animation*/,
+      frameHeight: 162,
+      hitbox: {
+        // adjust the hitbox for each sprite
+        sizeX: 40,
+        sizeY: 55,
+      },
+      scale: 1.6, // how much does it need to be scaled when added to the scene
     },
   },
 ];
