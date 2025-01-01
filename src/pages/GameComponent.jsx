@@ -10,7 +10,6 @@ const GameComponent = () => {
   const navigate = useNavigate();
   const [showExitModal, setShowExitModal] = useState(false); // State to control modal visibility
   const [winnerData, setWinnerData] = useState(null); // State to store winner details
-
   useEffect(() => {
     if (socket) {
       const DEFAULT_WIDTH = 1920;
@@ -39,7 +38,6 @@ const GameComponent = () => {
       };
 
       const game = new Phaser.Game(config);
-
       game.scene.start("bootloader", socket);
 
       // Listen for the winner event from the server

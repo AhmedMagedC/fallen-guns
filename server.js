@@ -150,7 +150,7 @@ function spawnAmmoCrate() {
       if (room.started)
         io.to(roomName).emit("createAmmoCrate", Math.random() * 1500); // random X pos
     });
-  }, 5000);
+  }, 10000);
 }
 
 spawnAmmoCrate();
