@@ -8,7 +8,9 @@ export default function Ready() {
   const [charIndex, setCharIndex] = useState(0);
   const [warning, setWarning] = useState(false);
   const [name, setName] = useState("");
+  const [roomId, setRoomId] = useState(""); // State for Room ID
   const [kills, setKills] = useState(5);
+  const [warningText, setWarningText] = useState("");
   const [selectedCharacter, setSelectedCharacter] = useState(
     characterStats[charIndex]
   );
@@ -35,19 +37,16 @@ export default function Ready() {
   const handleJoin = () => {
     if (!name) {
       setWarning(true);
+      setWarningText("Please Enter Your Name");
+    } else if (!owner && !roomId) {
+      setWarning(true);
+      setWarningText("Please Enter Room ID");
     } else {
       setWarning(false);
       const characterKey = Object.keys(selectedCharacter)[0];
       const character = selectedCharacter[characterKey];
-      // Save the selected character and name and navigate to the next scene
-      const characterData = {
-        name,
-        kills,
-        character: character,
-      };
-      localStorage.setItem("selectedChar", JSON.stringify(characterData));
-      // Assuming you have a next screen you want to navigate to
-      navigate("/lobby", { state: { characterData } });
+
+      navigate("/lobby", { state: { character, roomId, kills, name } });
     }
   };
 
@@ -80,6 +79,15 @@ export default function Ready() {
                 />
               </div>
             )}
+            {!owner && ( // Render Room ID input if not owner
+              <input
+                className="textinput"
+                type="text"
+                placeholder="Enter Room ID"
+                value={roomId}
+                onChange={(e) => setRoomId(e.target.value)}
+              />
+            )}
           </div>
           <div className="char">
             <div className="pic">
@@ -104,7 +112,7 @@ export default function Ready() {
           <button className="my-button" onClick={handleJoin}>
             Join
           </button>
-          {warning && <p className="warning">Please enter name</p>}
+          {warning && <p className="warning">{warningText}</p>}
         </div>
       </div>
     </div>

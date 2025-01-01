@@ -46,7 +46,7 @@ export class MainMenu extends Phaser.Scene {
     }
 
     // Highlight the selected character
-    // console.log(selectedChar.name);
+  
     character.setTint(0x00ff00); // Green tint
     selectedChar = character;
 

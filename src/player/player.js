@@ -4,6 +4,7 @@ export class Player extends Phaser.GameObjects.Sprite {
   constructor(
     scene,
     playerID,
+    playerName,
     name,
     bulletTime,
     ammo,
@@ -15,10 +16,11 @@ export class Player extends Phaser.GameObjects.Sprite {
   ) {
     super(scene);
     this.scene = scene;
-    this.name = name;
+    this.charName = name; // the name of character the player choose
+    this.playerName = playerName; // the name of the player
     this.id = playerID;
     this.currentState = "idle right"; //init state
-    this.animation = new Anim(this.id, this.scene, this.name, numOfAttacks);
+    this.animation = new Anim(this.id, this.scene, this.charName, numOfAttacks);
     this.bulletTime = bulletTime; // the time at which the bullet goes out of the gun (to sync with the animation)
     this.ammo = ammo;
     this.reshargedAmmo = ammo;
@@ -35,6 +37,7 @@ export class Player extends Phaser.GameObjects.Sprite {
     this.speedX = 500;
     this.speedY = 420;
     this.isDead = false;
+    this.score = 0;
     this.animation.createAnim();
     this.scene.add.existing(this); // add player to the scene
     this.scene.physics.add.existing(this); // add physics to the player
@@ -42,7 +45,7 @@ export class Player extends Phaser.GameObjects.Sprite {
     this.fireSound = []; // sound of the gun
     for (let sound = 0; sound < this.numOfAttacks; sound++) {
       this.fireSound[sound] = this.scene.sound.add(
-        `${this.name}_gun_sound_${sound}`
+        `${this.charName}_gun_sound_${sound}`
       );
     }
     this.body.setCollideWorldBounds(true);
@@ -349,11 +352,12 @@ export class Player extends Phaser.GameObjects.Sprite {
     this.setY(Math.random() * -1);
   }
 
-  targetedPlayer(player, bullet) {
+  targetedPlayer(player, killerId, bullet) {
     if (this.canCreateBullet()) {
       // if can create the bullet -> just make the enemy collide with the bullet
       this.scene.physics.add.overlap(player, bullet, () => {
-        this.damagePlayer(player, this.damage);
+        this.damagePlayer(player, killerId, this.damage);
+
         bullet.destroy();
       });
     } else {
@@ -366,22 +370,25 @@ export class Player extends Phaser.GameObjects.Sprite {
         xDistanceFromSrcPlayer * bulletDirection <= this.damageRange &&
         Math.abs(yDistanceFromSrcPlayer) <= 50
       ) {
-        this.damagePlayer(player, this.damage);
+        this.damagePlayer(player, killerId, this.damage);
+
         bullet.destroy();
       }
     }
   }
 
-  damagePlayer(player, damage) {
+  damagePlayer(player, killerId, damage) {
     if (player.isDead) return; // al drb fel myt 7aram
 
     player.gotHurt(damage);
-    if (player.curHealth <= 0) {
-      player.died();
-      setTimeout(() => {
-        // revive after 3 sec of being dead
-        player.revive();
-      }, 3000);
+
+    if (
+      player.curHealth <= 0 &&
+      !player.isDead &&
+      player.id == this.scene.socket.id
+    ) {
+      // if the client is dead inform the server to inform the rest of clients
+      this.scene.socket.emit("playerGotKilled", player.id, killerId); 
     }
   }
 }
