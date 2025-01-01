@@ -16,8 +16,8 @@ export class BootLoader extends Phaser.Scene {
     });
 
     this.load.image(
-      "sky forest",
-      "../../public/assets/Backgrounds/sky forest.png"
+      "arcade room",
+      "../../public/assets/Backgrounds/arcade room.png"
     );
     this.load.image("bullet", "../../public/assets/misc/bullet.png");
     this.load.image("ammo crate", "../../public/assets/misc/ammo crate.png");
@@ -30,12 +30,16 @@ export class BootLoader extends Phaser.Scene {
       "../../public/assets/platforms/green ground.jpg"
     );
     this.load.image(
+      "black ground",
+      "../../public/assets/platforms/black ground.jpg"
+    );
+    this.load.image(
       "blood particle",
       "../../public/assets/particles/blood particle.png"
     );
   }
   create() {
-    this.scene.start("firstscene", this.socket); // Switch to FirstScene
+    this.scene.start("MapArcadeRoom", this.socket); // Switch to FirstScene
   }
 
   loadCharacterAssets(char) {

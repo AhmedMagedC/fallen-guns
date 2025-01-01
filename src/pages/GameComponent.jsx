@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { FirstScene } from "../scenes/firstscene.js";
+import { MapArcadeRoom } from "../scenes/MapArcadeRoom.js";
 import { BootLoader } from "../scenes/bootloader.js";
 import { useSocket } from "./SocketContext";
 import { useNavigate } from "react-router-dom";
@@ -10,25 +10,20 @@ const GameComponent = () => {
   const navigate = useNavigate();
   const [showExitModal, setShowExitModal] = useState(false); // State to control modal visibility
   const [winnerData, setWinnerData] = useState(null); // State to store winner details
-
   useEffect(() => {
     if (socket) {
-      const ratio = Math.max(
-        window.innerWidth / window.innerHeight,
-        window.innerHeight / window.innerWidth
-      );
-      const DEFAULT_HEIGHT = 720;
-      const DEFAULT_WIDTH = ratio * DEFAULT_HEIGHT;
+      const DEFAULT_WIDTH = 1920;
+      const DEFAULT_HEIGHT = 1080;
 
       const config = {
         type: Phaser.AUTO,
         parent: "phaser-game",
-        backgroundColor: "rgba(0, 0, 0, 0.1)", // Set background transparency
+        backgroundColor: "rgba(0, 0, 0, 0)",
+        width: DEFAULT_WIDTH,
+        height: DEFAULT_HEIGHT,
         scale: {
           mode: Phaser.Scale.FIT,
           autoCenter: Phaser.Scale.CENTER_BOTH,
-          width: DEFAULT_WIDTH,
-          height: DEFAULT_HEIGHT,
         },
         physics: {
           default: "arcade",
@@ -39,7 +34,7 @@ const GameComponent = () => {
             },
           },
         },
-        scene: [BootLoader, FirstScene],
+        scene: [BootLoader, MapArcadeRoom],
       };
 
       const game = new Phaser.Game(config);
@@ -50,8 +45,8 @@ const GameComponent = () => {
         setWinnerData({ name, id });
 
         // Create the celebration effect using Phaser
-        if (game.scene.keys["firstscene"]) {
-          const scene = game.scene.keys["firstscene"];
+        if (game.scene.keys["MapArcadeRoom"]) {
+          const scene = game.scene.keys["MapArcadeRoom"];
 
           // Add confetti effect
           for (let i = 0; i < 200; i++) {
@@ -80,7 +75,7 @@ const GameComponent = () => {
             `Winner: ${name} (ID: ${id})`,
             {
               font: "48px Arial",
-              fill: "#000000", // Set text color to black
+              fill: "#ffffff", // Set text color to black
               align: "center",
             }
           );
@@ -155,7 +150,10 @@ const GameComponent = () => {
         <div className="modal-overlay">
           <div className="modal-content">
             <h3>Leave Game?</h3>
-            <p>Are you sure you want to leave the game and return to the main menu?</p>
+            <p>
+              Are you sure you want to leave the game and return to the main
+              menu?
+            </p>
             <div className="modal-buttons">
               <button onClick={confirmExit} className="btn-confirm">
                 Yes
@@ -169,8 +167,14 @@ const GameComponent = () => {
       )}
       {winnerData && (
         <div className="winner-overlay">
-          <h1 style={{ marginTop: "-200px", marginLeft: "50px" }}>🎉 Congratulations! 🎉</h1>
-          <h2 style={{ marginTop: "-150px", marginLeft: "50px" }}>
+          <h1
+            style={{ marginTop: "-200px", marginLeft: "50px", color: "white" }}
+          >
+            🎉 Congratulations! 🎉
+          </h1>
+          <h2
+            style={{ marginTop: "-150px", marginLeft: "50px", color: "white" }}
+          >
             {winnerData.name} (ID: {winnerData.id}) has won the game!
           </h2>
         </div>

@@ -104,7 +104,6 @@ export default function Ready() {
             </div>
             <div className="stats">
               <p>❤️Health: {character.health}</p>
-              <p>⏱️Bullet Time: {character.bulletTime}</p>
               <p>🔫Ammo: {character.ammo}</p>
               <p>💥Damage: {character.damage}</p>
             </div>
