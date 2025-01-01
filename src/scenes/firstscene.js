@@ -18,6 +18,8 @@ export class FirstScene extends Phaser.Scene {
     const grounds = [];
     this.createGrounds(grounds);
 
+    this.gameFinished = false;
+
     this.players = {}; // Store all players
 
     this.socket.emit("inTheScene"); //inform the server the player just spawned into the scene
@@ -127,13 +129,13 @@ export class FirstScene extends Phaser.Scene {
     });
 
     this.socket.on("playerGotKilled", (id, killerID) => {
-      
-      if (killerID == -1)
-        this.players[id]
-          .score--; // it means the player jumped of the cliff , so decrease a point of him
-      else this.players[killerID].score++;
+      if (this.players[id].isDead) return;
 
       this.players[id].died();
+
+      if (killerID == -1) this.players[id].score--;
+      // it means the player jumped of the cliff , so decrease a point of him
+      else this.players[killerID].score++;
     });
 
     this.socket.on("revivePlayer", (id) => {
@@ -173,6 +175,18 @@ export class FirstScene extends Phaser.Scene {
             Number.MAX_VALUE
           );
       });
+
+      if (
+        this.players[this.socket.id].score >= this.maxKills &&
+        !this.gameFinished
+      ) {
+        this.gameFinished = true; // indicate the game had finished once any player won
+        this.socket.emit(
+          "playerWon",
+          this.players[this.socket.id].playerName,
+          this.socket.id
+        );
+      }
     }
   }
   createBackGround() {
@@ -239,7 +253,7 @@ export class FirstScene extends Phaser.Scene {
     // Calculate the dynamic size of the scoreboard
     const padding = 20; // Padding around the text
     const lineHeight = 30; // Height of each line
-    const contentWidth = 300; // Fixed width for the scoreboard
+    const contentWidth = 620; // Fixed width for the scoreboard
     const contentHeight =
       padding * 2 + lineHeight * (1 + Object.keys(this.players).length); // Height includes title + player list
 
@@ -255,7 +269,7 @@ export class FirstScene extends Phaser.Scene {
         contentWidth, // Dynamic width
         contentHeight, // Dynamic height
         0x1e1e1e, // Dark gray background
-        0.8 // Slight transparency
+        0.6 // Slight transparency
       )
       .setOrigin(0.5); // Center the rectangle
 
@@ -265,7 +279,7 @@ export class FirstScene extends Phaser.Scene {
     const title = this.add.text(
       centerX - contentWidth / 2 + padding, // Align text to the left inside the background
       centerY - contentHeight / 2 + padding, // Start at the top of the background
-      `Max kills to win: ${maxKillsToWin}`,
+      `\t\t\t Max kills to win: ${maxKillsToWin}`,
       {
         fontSize: "18px",
         fill: "#ffffff", // White color for the title
@@ -285,7 +299,7 @@ export class FirstScene extends Phaser.Scene {
       const text = this.add.text(
         centerX - contentWidth / 2 + padding, // Align text to the left inside the background
         initY, // Y position
-        `${playerName}: \t\t${score}`, // Player name and score
+        `name: ${playerName} \t\t\t score: ${score}\t\t\t id: ${id}`, // Player name and score
         {
           fontSize: "16px",
           fill: isClient ? "#00ff00" : "#ffffff", // Green for the client, white for others

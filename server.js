@@ -48,6 +48,11 @@ io.on("connection", (socket) => {
       rooms[socket.id].maxKills = data.kills; // setting the score for each room
       rooms[socket.id].players.push(player); // push that player into the room
     } else {
+      let foundRoom = false;
+      Object.keys(rooms).forEach((roomName) => {
+        if (data.roomId == roomName) foundRoom = true;
+      });
+      if (!foundRoom) return;
       socket.join(data.roomId);
       rooms[data.roomId].players.push(player);
     }
@@ -125,6 +130,14 @@ io.on("connection", (socket) => {
     setTimeout(() => {
       io.to(targetRoom).emit("revivePlayer", id); // revive him after 3 sec of being dead
     }, 3000);
+  });
+
+  socket.on("playerWon", (playerName, playerId) => {
+    const targetRoom = Array.from(socket.rooms).at(-1);
+    io.to(targetRoom).emit("game:playerWon", {
+      name: playerName,
+      id: playerId,
+    });
   });
 });
 
